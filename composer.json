@@ -1,9 +1,9 @@
 
 {
-    "name": "johnshopkins/HttpExchange",
+    "name": "johnshopkins/http-exchange",
     "description": "A library of PHP interfaces and adapters to make swapping out HTTP library dependencies quick and easy.",
     "keywords": ["http", "interfaces", "adapters", "api", "wrapper"],
-    "homepage": "http://github.com/johnshopkins/HttpExchange",
+    "homepage": "http://github.com/johnshopkins/http-exchange",
     "license": "MIT",
     "authors": [
         {
