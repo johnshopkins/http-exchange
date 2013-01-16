@@ -1,0 +1,27 @@
+
+{
+    "name": "johnshopkins/HttpExchange",
+    "description": "A consistent interface to standardize PHP HTTP clients for use across other libraries",
+    "keywords": ["http", "interfaces", "adapters", "api", "wrapper"],
+    "homepage": "http://github.com/johnshopkins/HttpExchange",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jason Rhodes",
+            "email": "jrhodes@jhu.edu",
+            "homepage": "http://notrobotic.com"
+        },
+        {
+            "name": "Jen Wachter",
+            "email": "jwachter@jhu.edu"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.2"
+    },
+    "autoload": {
+        "psr-0" : {
+            "HttpExchange" : ""
+        }
+    }
+}
