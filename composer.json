@@ -1,7 +1,7 @@
 
 {
     "name": "johnshopkins/HttpExchange",
-    "description": "A consistent interface to standardize PHP HTTP clients for use across other libraries",
+    "description": "A library of PHP interfaces and adapters to make swapping out HTTP library dependencies quick and easy.",
     "keywords": ["http", "interfaces", "adapters", "api", "wrapper"],
     "homepage": "http://github.com/johnshopkins/HttpExchange",
     "license": "MIT",
