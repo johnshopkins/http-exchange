@@ -1,9 +1,10 @@
 <?php
 
-namespace HttpExchange\interfaces;
+namespace HttpExchange\Interfaces;
 
-class ClientInterface
+interface ClientInterface
 {
+	public function __construct($httpEngine);
 	public function get($url);
 	public function getBody();
 	public function getStatusCode();

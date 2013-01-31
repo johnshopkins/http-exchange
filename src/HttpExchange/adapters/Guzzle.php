@@ -1,8 +1,8 @@
 <?php
 
-namespace HttpExchange\adapters;
+namespace HttpExchange\Adapters;
 
-class Guzzle implements \HttpExchange\interfaces\ClientInterface
+class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 {
 	public $http;
 	protected $response;

@@ -1,8 +1,8 @@
 <?php
 
-namespace HttpExchange\adapters;
+namespace HttpExchange\Adapters;
 
-class Resty implements \HttpExchange\interfaces\ClientInterface
+class Resty implements \HttpExchange\Interfaces\ClientInterface
 {
 	public $http;
 	protected $response;
