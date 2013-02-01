@@ -12,7 +12,8 @@
         },
         {
             "name": "Jen Wachter",
-            "email": "jwachter@jhu.edu"
+            "email": "jwachter@jhu.edu",
+            "homepage": "http://www.jenwachter.com"
         }
     ],
     "require": {
