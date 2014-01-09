@@ -12,9 +12,15 @@ class Resty implements \HttpExchange\Interfaces\ClientInterface
 		$this->http = $resty;
 	}
 
-	public function get($url, $params = null, $headers = null)
+	public function get($url, $params = null, $headers = null, $options = null)
 	{
-		$this->response = $this->http->get($url, $params, $headers);
+		$this->response = $this->http->get($url, $params, $headers, $options);
+		return $this;
+	}
+
+	public function post($url, $params = null, $headers = null, $options = null)
+	{
+		$this->response = $this->http->post($url, $params, $headers, $options);
 		return $this;
 	}
 
