@@ -5,7 +5,7 @@ namespace HttpExchange\Adapters;
 class Resty implements \HttpExchange\Interfaces\ClientInterface
 {
 	public $http;
-	protected $response;
+	public $response;
 
 	public function __construct($resty)
 	{
