@@ -12,6 +12,11 @@ class Resty implements \HttpExchange\Interfaces\ClientInterface
 		$this->http = $resty;
 	}
 
+	public function setCredentials($username, $password)
+	{
+		$this->http->setCredentials($username, $password);
+	}
+
 	public function get($url, $params = null, $headers = null, $options = null)
 	{
 		$this->response = $this->http->get($url, $params, $headers, $options);
