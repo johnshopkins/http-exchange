@@ -29,9 +29,21 @@ class Resty implements \HttpExchange\Interfaces\ClientInterface
 		return $this;
 	}
 
+	public function put($url, $params = null, $headers = null, $options = null)
+	{
+		$this->response = $this->http->put($url, $params, $headers, $options);
+		return $this;
+	}
+
 	public function patch($url, $params = null, $headers = null, $options = null)
 	{
 		$this->response = $this->http->patch($url, $params, $headers, $options);
+		return $this;
+	}
+
+	public function delete($url, $params = null, $headers = null, $options = null)
+	{
+		$this->response = $this->http->delete($url, $params, $headers, $options);
 		return $this;
 	}
 
