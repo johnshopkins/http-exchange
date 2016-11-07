@@ -34,59 +34,149 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		$this->http->setCredentials($username, $password);
 	}
 
-	public function get($url, $params = null, $headers = null, $options = null)
+	public function createRequest($method, $url, $params = null, $header = null, $options = null)
 	{
-		$this->response = $this->http->get($url, array(
+		$args = array(
 			"headers" => $headers,
 			"query" => $params,
 			"exceptions" => false
-		));
+		);
+
+		if (is_array($options)) {
+			$args = array_merge($options, $args);
+		}
+
+		return $this->http->createRequest($method, $url, $args);
+	}
+
+	/**
+	 * Fetch a batch of requests.
+	 * @param  array $requests Array of requests created using $this->createRequest
+	 * @return array Data returned by each request
+	 */
+	public function batch($requests)
+	{
+		$options = array("pool_size" => 5);
+		$results = \GuzzleHttp\Pool::batch($this->http, $requests, $options);
+		$this->response = $results->getIterator();
+
+		return $this;
+	}
+
+	public function get($url, $params = null, $headers = null, $options = null)
+	{
+		$args = array(
+			"headers" => $headers,
+			"query" => $params,
+			"exceptions" => false
+		);
+
+		if (is_array($options)) {
+			$args = array_merge($options, $args);
+		}
+
+		$this->response = $this->http->get($url, $args);
+
 		return $this;
 	}
 
 	public function post($url, $params = null, $headers = null, $options = null)
 	{
-		$this->response = $this->http->post($url, array(
+		$args = array(
 			"headers" => $headers,
 			"query" => $params,
 			"exceptions" => false
-		));
+		);
+
+		if (is_array($options)) {
+			$args = array_merge($options, $args);
+		}
+
+		$this->response = $this->http->post($url, $args);
+
 		return $this;
 	}
 
 	public function put($url, $params = null, $headers = null, $options = null)
 	{
-		$this->response = $this->http->put($url, array(
+		$args = array(
 			"headers" => $headers,
 			"query" => $params,
 			"exceptions" => false
-		));
+		);
+
+		if (is_array($options)) {
+			$args = array_merge($options, $args);
+		}
+
+		$this->response = $this->http->put($url, $args);
+
 		return $this;
 	}
 
 	public function patch($url, $params = null, $headers = null, $options = null)
 	{
-		$this->response = $this->http->patch($url, array(
+		$args = array(
 			"headers" => $headers,
 			"query" => $params,
 			"exceptions" => false
-		));
+		);
+
+		if (is_array($options)) {
+			$args = array_merge($options, $args);
+		}
+
+		$this->response = $this->http->patch($url, $args);
+
 		return $this;
 	}
 
 	public function delete($url, $params = null, $headers = null, $options = null)
 	{
-		$this->response = $this->http->delete($url, array(
+		$args = array(
 			"headers" => $headers,
 			"query" => $params,
 			"exceptions" => false
-		));
+		);
+
+		if (is_array($options)) {
+			$args = array_merge($options, $args);
+		}
+
+		$this->response = $this->http->delete($url, $args);
+
 		return $this;
 	}
 
+	/**
+	 * Get the body of the response, which
+	 * can be one response or a pool or responses.
+	 * @return mixed
+	 */
 	public function getBody()
 	{
-		$headers = $this->response->getHeaders();
+		if (isset($this->response->headers)) {
+			// single response
+			return $this->parseBody($this->response);
+		} else {
+			$responses = array();
+			foreach ($this->response as $response) {
+				$responses[] = $this->parseBody($response);
+			}
+			return $responses;
+		}
+
+	}
+
+	/**
+	 * Based on the headers of the response,
+	 * determine the formatted body (xml or json)
+	 * @param  object $response Response object
+	 * @return mixed
+	 */
+	protected function parseBody($response)
+	{
+		$headers = $response->getHeaders();
 
 		// if redirected, we use last Content-Type
 		if (is_array($headers["Content-Type"])) {
@@ -96,7 +186,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		$contentType = preg_split("/[;\s]+/", $contentType);
 		$contentType = $contentType[0];
 
-		$body = (string) $this->response->getBody();
+		$body = (string) $response->getBody();
 
 		if (in_array($contentType, $this->json_types) || strpos($contentType, "+json") !== false) {
 
@@ -110,6 +200,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 			return $body;
 		}
 	}
+
 
 	public function getStatusCode()
 	{
