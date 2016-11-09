@@ -58,6 +58,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 	{
 		$options = array("pool_size" => 5);
 		$results = \GuzzleHttp\Pool::batch($this->http, $requests, $options);
+
 		$this->response = $results->getIterator();
 
 		return $this;
