@@ -177,6 +177,11 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 	 */
 	protected function parseBody($response)
 	{
+		if (!method_exists($response, "getHeaders")) {
+			error_log("getHeaders method does not exist. " . json_encode($reponse));
+			var_dump($response); die();
+		}
+
 		$headers = $response->getHeaders();
 
 		// if redirected, we use last Content-Type
