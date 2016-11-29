@@ -27,6 +27,11 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 	public function __construct($guzzle)
 	{
 		$this->http = $guzzle;
+
+		if (defined("ENV") && ENV == "local") {
+			// do not try to verify cert on local
+			$this->http->setDefaultOption("verify", false);
+		}
 	}
 
 	public function setCredentials($username, $password)
@@ -177,8 +182,8 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 	protected function parseBody($response)
 	{
 		if (!method_exists($response, "getHeaders")) {
-			error_log("getHeaders method does not exist. " . json_encode($reponse));
-			var_dump($response); die();
+			error_log("getHeaders method does not exist. Message: " . $response->getMessage());
+			var_dump($response->getMessage()); die();
 		}
 
 		$headers = $response->getHeaders();
