@@ -156,7 +156,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 	 */
 	public function getBody()
 	{
-		if (isset($this->response->headers)) {
+		if (method_exists($this->response, "getHeaders")) {
 			// single response
 			return $this->parseBody($this->response);
 		} else {
@@ -166,7 +166,6 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 			}
 			return $responses;
 		}
-
 	}
 
 	/**
