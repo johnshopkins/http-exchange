@@ -188,9 +188,11 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 
 		$headers = $response->getHeaders();
 
-		// if redirected, we use last Content-Type
-		if (is_array($headers["Content-Type"])) {
-			$contentType = end($headers["Content-Type"]);
+		// make case consistent
+		$headers = array_change_key_case($headers, CASE_LOWER);
+
+		if (isset($headers["content-type"]) && is_array($headers["content-type"])) {
+			$contentType = end($headers["content-type"]);
 		}
 
 		$contentType = preg_split("/[;\s]+/", $contentType);
