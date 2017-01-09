@@ -183,7 +183,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 	{
 		if (!method_exists($response, "getHeaders")) {
 			error_log("getHeaders method does not exist. Message: " . $response->getMessage());
-			var_dump($response->getMessage()); die();
+			// var_dump($response->getMessage()); die();
 		}
 
 		$headers = $response->getHeaders();
