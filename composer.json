@@ -1,21 +1,8 @@
 {
     "name": "johnshopkins/http-exchange",
     "description": "A collection of PHP interfaces and adapters to make swapping out HTTP library dependencies quick and easy.",
-    "keywords": ["http", "interfaces", "adapters", "api", "wrapper"],
     "homepage": "http://github.com/johnshopkins/http-exchange",
     "license": "MIT",
-    "authors": [
-        {
-            "name": "Jason Rhodes",
-            "email": "jrhodes@jhu.edu",
-            "homepage": "http://notrobotic.com"
-        },
-        {
-            "name": "Jen Wachter",
-            "email": "jwachter@jhu.edu",
-            "homepage": "http://www.jenwachter.com"
-        }
-    ],
     "require": {
         "php": ">=5.3.2"
     },
