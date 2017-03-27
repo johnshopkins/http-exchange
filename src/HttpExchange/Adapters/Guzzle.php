@@ -154,6 +154,23 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		return $this;
 	}
 
+	public function head($url, $params = null, $headers = null, $options = null)
+	{
+		$args = array(
+			"headers" => $headers,
+			"query" => $params,
+			"exceptions" => false
+		);
+
+		if (is_array($options)) {
+			$args = array_merge($options, $args);
+		}
+
+		$this->response = $this->http->head($url, $args);
+
+		return $this;
+	}
+
 	/**
 	 * Get the body of the response, which
 	 * can be one response or a pool or responses.
