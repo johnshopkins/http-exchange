@@ -5,11 +5,13 @@ namespace HttpExchange\Adapters;
 class Resty implements \HttpExchange\Interfaces\ClientInterface
 {
 	public $http;
+	protected $logger;
 	public $response;
 
-	public function __construct($resty)
+	public function __construct($resty, $logger = null)
 	{
 		$this->http = $resty;
+		$this->logger = $logger;
 	}
 
 	public function setCredentials($username, $password)

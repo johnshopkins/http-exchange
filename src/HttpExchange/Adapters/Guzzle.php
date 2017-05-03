@@ -5,6 +5,7 @@ namespace HttpExchange\Adapters;
 class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 {
 	public $http;
+	protected $logger;
 	public $response;
 
 	public $json_types = array(
@@ -24,9 +25,10 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		"application/mathml+xml"
 	);
 
-	public function __construct($guzzle)
+	public function __construct($guzzle, $logger = null)
 	{
 		$this->http = $guzzle;
+		$this->logger = $logger;
 
 		if (defined("ENV") && ENV == "local") {
 			// do not try to verify cert on local
