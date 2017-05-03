@@ -36,6 +36,15 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		}
 	}
 
+	protected function log($level = "error", $message, $data = array())
+	{
+		$method = "add" . ucfirst($level);
+
+		if ($this->logger && method_exists($this->logger, $method)) {
+			$this->logger->$method($message, $data);
+		}
+	}
+
 	public function setCredentials($username, $password)
 	{
 		$this->http->setCredentials($username, $password);
@@ -68,6 +77,29 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 
 		$this->response = $results->getIterator();
 
+		foreach ($this->response as $num => &$response) {
+
+			// evaluate responses for exceptions when we
+			// have access to the request info
+
+			if (is_a($response, "Exception")) {
+
+				$request = $requests[$num];
+
+				$this->log("error", "Request in Guzzle BATCH request failed", array(
+					"method" => $request->getMethod(),
+					"url" => $request->getScheme() . "://" . $request->getHost() . $request->getPath(),
+					"params" => $request->getQuery(),
+					"error"
+				));
+
+				$response = null;
+			}
+
+
+
+		}
+
 		return $this;
 	}
 
@@ -83,7 +115,17 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 			$args = array_merge($options, $args);
 		}
 
-		$this->response = $this->http->get($url, $args);
+		try {
+			$this->response = $this->http->get($url, $args);
+		} catch (\Exception $e) {
+			$this->log("error", "Guzzle GET request failed", array(
+				"url" => $url,
+				"params" => $params,
+				"headers" => $headers,
+				"error" => $e->getMessage(),
+				"url" => $_SERVER["REQUEST_URI"]
+			));
+		}
 
 		return $this;
 	}
@@ -100,7 +142,16 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 			$args = array_merge($options, $args);
 		}
 
-		$this->response = $this->http->post($url, $args);
+		try {
+			$this->response = $this->http->post($url, $args);
+		} catch (\Exception $e) {
+			$this->log("error", "Guzzle POST request failed", array(
+				"url" => $url,
+				"params" => $params,
+				"headers" => $headers,
+				"error" => $e->getMessage()
+			));
+		}
 
 		return $this;
 	}
@@ -117,7 +168,16 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 			$args = array_merge($options, $args);
 		}
 
-		$this->response = $this->http->put($url, $args);
+		try {
+			$this->response = $this->http->put($url, $args);
+		} catch (\Exception $e) {
+			$this->log("error", "Guzzle PUT request failed", array(
+				"url" => $url,
+				"params" => $params,
+				"headers" => $headers,
+				"error" => $e->getMessage()
+			));
+		}
 
 		return $this;
 	}
@@ -134,7 +194,16 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 			$args = array_merge($options, $args);
 		}
 
-		$this->response = $this->http->patch($url, $args);
+		try {
+			$this->response = $this->http->patch($url, $args);
+		} catch (\Exception $e) {
+			$this->log("error", "Guzzle PATCH request failed", array(
+				"url" => $url,
+				"params" => $params,
+				"headers" => $headers,
+				"error" => $e->getMessage()
+			));
+		}
 
 		return $this;
 	}
@@ -151,7 +220,16 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 			$args = array_merge($options, $args);
 		}
 
-		$this->response = $this->http->delete($url, $args);
+		try {
+			$this->response = $this->http->delete($url, $args);
+		} catch (\Exception $e) {
+			$this->log("error", "Guzzle DELETE request failed", array(
+				"url" => $url,
+				"params" => $params,
+				"headers" => $headers,
+				"error" => $e->getMessage()
+			));
+		}
 
 		return $this;
 	}
@@ -168,7 +246,16 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 			$args = array_merge($options, $args);
 		}
 
-		$this->response = $this->http->head($url, $args);
+		try {
+			$this->response = $this->http->head($url, $args);
+		} catch (\Exception $e) {
+			$this->log("error", "Guzzle HEAD request failed", array(
+				"url" => $url,
+				"params" => $params,
+				"headers" => $headers,
+				"error" => $e->getMessage()
+			));
+		}
 
 		return $this;
 	}
@@ -180,10 +267,13 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 	 */
 	public function getBody()
 	{
+		if (!$this->response) return null;
+
 		if (method_exists($this->response, "getHeaders")) {
 			// single response
 			return $this->parseBody($this->response);
 		} else {
+			// batch response
 			$responses = array();
 			foreach ($this->response as $response) {
 				$responses[] = $this->parseBody($response);
@@ -200,11 +290,8 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 	 */
 	protected function parseBody($response)
 	{
-		if (!method_exists($response, "getHeaders")) {
-			error_log("getHeaders method does not exist. Message: " . $response->getMessage());
-			// var_dump($response->getMessage()); die();
-		}
-
+		if (!$response) return null;
+		
 		$headers = $response->getHeaders();
 
 		// make case consistent
@@ -235,7 +322,12 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 
 	public function getStatusCode()
 	{
-		return $this->response->getStatusCode();
+		if ($this->response) {
+			return $this->response->getStatusCode();
+		} else {
+			return null;
+		}
+
 	}
 
 }
