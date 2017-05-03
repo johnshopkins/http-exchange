@@ -95,9 +95,6 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 
 				$response = null;
 			}
-
-
-
 		}
 
 		return $this;
@@ -125,6 +122,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 				"error" => $e->getMessage(),
 				"url" => $_SERVER["REQUEST_URI"]
 			));
+			$this->response = null;
 		}
 
 		return $this;
@@ -151,6 +149,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 				"headers" => $headers,
 				"error" => $e->getMessage()
 			));
+			$this->response = null;
 		}
 
 		return $this;
@@ -177,6 +176,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 				"headers" => $headers,
 				"error" => $e->getMessage()
 			));
+			$this->response = null;
 		}
 
 		return $this;
@@ -203,6 +203,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 				"headers" => $headers,
 				"error" => $e->getMessage()
 			));
+			$this->response = null;
 		}
 
 		return $this;
@@ -229,6 +230,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 				"headers" => $headers,
 				"error" => $e->getMessage()
 			));
+			$this->response = null;
 		}
 
 		return $this;
@@ -255,6 +257,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 				"headers" => $headers,
 				"error" => $e->getMessage()
 			));
+			$this->response = null;
 		}
 
 		return $this;
@@ -291,7 +294,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 	protected function parseBody($response)
 	{
 		if (!$response) return null;
-		
+
 		$headers = $response->getHeaders();
 
 		// make case consistent
@@ -325,6 +328,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		if ($this->response) {
 			return $this->response->getStatusCode();
 		} else {
+			// exception
 			return null;
 		}
 
