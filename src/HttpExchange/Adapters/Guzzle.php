@@ -116,7 +116,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 			$this->response = $this->http->get($url, $args);
 		} catch (\Exception $e) {
 			$this->log("error", "Guzzle GET request failed", array(
-				"url" => $url,
+				"endpoint" => $url,
 				"params" => $params,
 				"headers" => $headers,
 				"error" => $e->getMessage(),
@@ -144,7 +144,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 			$this->response = $this->http->post($url, $args);
 		} catch (\Exception $e) {
 			$this->log("error", "Guzzle POST request failed", array(
-				"url" => $url,
+				"endpoint" => $url,
 				"params" => $params,
 				"headers" => $headers,
 				"error" => $e->getMessage()
@@ -171,7 +171,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 			$this->response = $this->http->put($url, $args);
 		} catch (\Exception $e) {
 			$this->log("error", "Guzzle PUT request failed", array(
-				"url" => $url,
+				"endpoint" => $url,
 				"params" => $params,
 				"headers" => $headers,
 				"error" => $e->getMessage()
@@ -198,7 +198,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 			$this->response = $this->http->patch($url, $args);
 		} catch (\Exception $e) {
 			$this->log("error", "Guzzle PATCH request failed", array(
-				"url" => $url,
+				"endpoint" => $url,
 				"params" => $params,
 				"headers" => $headers,
 				"error" => $e->getMessage()
@@ -225,7 +225,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 			$this->response = $this->http->delete($url, $args);
 		} catch (\Exception $e) {
 			$this->log("error", "Guzzle DELETE request failed", array(
-				"url" => $url,
+				"endpoint" => $url,
 				"params" => $params,
 				"headers" => $headers,
 				"error" => $e->getMessage()
@@ -252,7 +252,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 			$this->response = $this->http->head($url, $args);
 		} catch (\Exception $e) {
 			$this->log("error", "Guzzle HEAD request failed", array(
-				"url" => $url,
+				"endpoint" => $url,
 				"params" => $params,
 				"headers" => $headers,
 				"error" => $e->getMessage()
