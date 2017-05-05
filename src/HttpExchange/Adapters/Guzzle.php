@@ -25,14 +25,13 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		"application/mathml+xml"
 	);
 
-	public function __construct($guzzle, $logger = null)
+	public function __construct($guzzle, $logger = null, $options = array())
 	{
 		$this->http = $guzzle;
 		$this->logger = $logger;
 
-		if (defined("ENV") && ENV == "local") {
-			// do not try to verify cert on local
-			$this->http->setDefaultOption("verify", false);
+		foreach ($options as $key => $value) {
+			$this->http->setDefaultOption($key, $value);
 		}
 	}
 
