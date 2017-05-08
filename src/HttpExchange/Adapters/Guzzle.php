@@ -89,7 +89,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 					"method" => $request->getMethod(),
 					"url" => $request->getScheme() . "://" . $request->getHost() . $request->getPath(),
 					"params" => $request->getQuery(),
-					"error"
+					"error" => $response->getMessage()
 				));
 
 				$response = null;
