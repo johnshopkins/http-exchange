@@ -7,6 +7,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 	public $http;
 	protected $logger;
 	public $response;
+	protected $debug = false;
 
 	public $json_types = array(
 		"application/json",
@@ -31,6 +32,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		$this->logger = $logger;
 
 		foreach ($options as $key => $value) {
+			if ($key == "debug" && $value) $this->debug = true;
 			$this->http->setDefaultOption($key, $value);
 		}
 	}
@@ -112,15 +114,33 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		}
 
 		try {
-			$this->response = $this->http->get($url, $args);
+
+			// start output buffering
+			if ($this->debug) ob_start();
+
+			// run method
+	    $this->response = $this->http->get($url, $args);
+
+			// end output buffering
+	    if ($this->debug) ob_end_clean();
+
 		} catch (\Exception $e) {
-			$this->log("error", "Guzzle GET request failed", array(
+
+			$logData = array(
 				"endpoint" => $url,
 				"params" => $params,
 				"headers" => $headers,
 				"error" => $e->getMessage(),
 				"url" => $_SERVER["REQUEST_URI"]
-			));
+			);
+
+			if ($this->debug) {
+				$logData["debug"] = ob_get_contents();
+				ob_end_clean(); // end output buffering
+			}
+
+			$this->log("error", "Guzzle GET request failed", $logData);
+
 			$this->response = null;
 		}
 
@@ -140,7 +160,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		}
 
 		try {
-			$this->response = $this->http->post($url, $args);
+	    $this->response = $this->http->post($url, $args);
 		} catch (\Exception $e) {
 			$this->log("error", "Guzzle POST request failed", array(
 				"endpoint" => $url,
@@ -167,7 +187,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		}
 
 		try {
-			$this->response = $this->http->put($url, $args);
+	    $this->response = $this->http->put($url, $args);
 		} catch (\Exception $e) {
 			$this->log("error", "Guzzle PUT request failed", array(
 				"endpoint" => $url,
@@ -194,7 +214,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		}
 
 		try {
-			$this->response = $this->http->patch($url, $args);
+	    $this->response = $this->http->patch($url, $args);
 		} catch (\Exception $e) {
 			$this->log("error", "Guzzle PATCH request failed", array(
 				"endpoint" => $url,
@@ -221,7 +241,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		}
 
 		try {
-			$this->response = $this->http->delete($url, $args);
+	    $this->response = $this->http->delete($url, $args);
 		} catch (\Exception $e) {
 			$this->log("error", "Guzzle DELETE request failed", array(
 				"endpoint" => $url,
@@ -248,7 +268,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		}
 
 		try {
-			$this->response = $this->http->head($url, $args);
+	    $this->response = $this->http->head($url, $args);
 		} catch (\Exception $e) {
 			$this->log("error", "Guzzle HEAD request failed", array(
 				"endpoint" => $url,
