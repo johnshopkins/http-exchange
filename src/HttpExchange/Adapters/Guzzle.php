@@ -75,9 +75,9 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 	{
 		$options = array("pool_size" => 5);
 
-		ob_start();
+		if ($thi->debug) ob_start();
 		$results = \GuzzleHttp\Pool::batch($this->http, $requests, $options);
-		ob_end_clean();
+		if ($thi->debug) ob_end_clean();
 
 		$this->response = $results->getIterator();
 
@@ -163,9 +163,9 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		}
 
 		try {
-			ob_start();
+			if ($thi->debug) ob_start();
 	    $this->response = $this->http->post($url, $args);
-			ob_end_clean();
+			if ($thi->debug) ob_end_clean();
 		} catch (\Exception $e) {
 			$this->log("error", "Guzzle POST request failed", array(
 				"endpoint" => $url,
@@ -192,9 +192,9 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		}
 
 		try {
-			ob_start();
+			if ($thi->debug) ob_start();
 	    $this->response = $this->http->put($url, $args);
-			ob_end_clean();
+			if ($thi->debug) ob_end_clean();
 		} catch (\Exception $e) {
 			$this->log("error", "Guzzle PUT request failed", array(
 				"endpoint" => $url,
@@ -221,9 +221,9 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		}
 
 		try {
-			ob_start();
+			if ($thi->debug) ob_start();
 	    $this->response = $this->http->patch($url, $args);
-			ob_end_clean();
+			if ($thi->debug) ob_end_clean();
 		} catch (\Exception $e) {
 			$this->log("error", "Guzzle PATCH request failed", array(
 				"endpoint" => $url,
@@ -250,9 +250,9 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		}
 
 		try {
-			ob_start();
+			if ($thi->debug) ob_start();
 	    $this->response = $this->http->delete($url, $args);
-			ob_end_clean();
+			if ($thi->debug) ob_end_clean();
 		} catch (\Exception $e) {
 			$this->log("error", "Guzzle DELETE request failed", array(
 				"endpoint" => $url,
@@ -279,9 +279,9 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		}
 
 		try {
-			ob_start();
+			if ($thi->debug) ob_start();
 	    $this->response = $this->http->head($url, $args);
-			ob_end_clean();
+			if ($thi->debug) ob_end_clean();
 		} catch (\Exception $e) {
 			$this->log("error", "Guzzle HEAD request failed", array(
 				"endpoint" => $url,
