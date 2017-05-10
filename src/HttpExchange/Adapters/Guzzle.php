@@ -173,6 +173,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 				"headers" => $headers,
 				"error" => $e->getMessage()
 			));
+			if ($this->debug) ob_end_clean();
 			$this->response = null;
 		}
 
@@ -202,6 +203,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 				"headers" => $headers,
 				"error" => $e->getMessage()
 			));
+			if ($this->debug) ob_end_clean();
 			$this->response = null;
 		}
 
@@ -231,6 +233,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 				"headers" => $headers,
 				"error" => $e->getMessage()
 			));
+			if ($this->debug) ob_end_clean();
 			$this->response = null;
 		}
 
@@ -260,6 +263,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 				"headers" => $headers,
 				"error" => $e->getMessage()
 			));
+			if ($this->debug) ob_end_clean();
 			$this->response = null;
 		}
 
@@ -289,6 +293,7 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 				"headers" => $headers,
 				"error" => $e->getMessage()
 			));
+			if ($this->debug) ob_end_clean();
 			$this->response = null;
 		}
 
