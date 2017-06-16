@@ -99,7 +99,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 			"exceptions" => false
 		);
 
-		$options = normalizeOptions($options);
+		$options = $this->normalizeOptions($options);
 
 		if (is_array($options)) {
 			$args = array_merge($options, $args);
@@ -147,7 +147,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 			"exceptions" => false
 		);
 
-		$options = normalizeOptions($options);
+		$options = $this->normalizeOptions($options);
 
 		if (is_array($options)) {
 			$args = array_merge($options, $args);
@@ -179,7 +179,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 			"exceptions" => false
 		);
 
-		$options = normalizeOptions($options);
+		$options = $this->normalizeOptions($options);
 
 		if (is_array($options)) {
 			$args = array_merge($options, $args);
@@ -211,7 +211,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 			"exceptions" => false
 		);
 
-		$options = normalizeOptions($options);
+		$options = $this->normalizeOptions($options);
 
 		if (is_array($options)) {
 			$args = array_merge($options, $args);
@@ -243,7 +243,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 			"exceptions" => false
 		);
 
-		$options = normalizeOptions($options);
+		$options = $this->normalizeOptions($options);
 
 		if (is_array($options)) {
 			$args = array_merge($options, $args);
@@ -275,7 +275,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 			"exceptions" => false
 		);
 
-		$options = normalizeOptions($options);
+		$options = $this->normalizeOptions($options);
 
 		if (is_array($options)) {
 			$args = array_merge($options, $args);
