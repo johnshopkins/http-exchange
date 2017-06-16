@@ -2,7 +2,7 @@
 
 namespace HttpExchange\Adapters;
 
-class Guzzle implements \HttpExchange\Interfaces\ClientInterface
+class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 {
 	public $http;
 	protected $logger;
@@ -26,15 +26,11 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		"application/mathml+xml"
 	);
 
-	public function __construct($guzzle, $logger = null, $options = array())
+	public function __construct($guzzle, $logger = null)
 	{
 		$this->http = $guzzle;
 		$this->logger = $logger;
-
-		foreach ($options as $key => $value) {
-			if ($key == "debug" && $value) $this->debug = true;
-			$this->http->setDefaultOption($key, $value);
-		}
+		$this->debug = $this->http->getConfig("debug");
 	}
 
 	protected function log($level = "error", $message, $data = array())
@@ -46,19 +42,19 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		}
 	}
 
-	public function createRequest($method, $url, $params = null, $header = null, $options = null)
+	public function createAsynsRequest($method, $url, $params = null, $header = null, $options = null)
 	{
 		$args = array(
 			"headers" => $headers,
-			"query" => $params,
-			"exceptions" => false
+			"query" => $params
 		);
 
 		if (is_array($options)) {
 			$args = array_merge($options, $args);
 		}
 
-		return $this->http->createRequest($method, $url, $args);
+		$method = strtolower($method) . "Async";
+		return $this->http->$method($url, $args);
 	}
 
 	/**
@@ -68,33 +64,19 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 	 */
 	public function batch($requests)
 	{
-		$options = array("pool_size" => 5);
+		// add a request that will fail
+		array_unshift($requests, $this->createAsynsRequest("get", "http://blah"));
 
 		if ($this->debug) ob_start();
-		$results = \GuzzleHttp\Pool::batch($this->http, $requests, $options);
+
+		// Wait for the requests to complete, even if some of them fail
+		$this->response = \GuzzleHttp\Promise\settle($requests)->wait();
+
 		if ($this->debug) ob_end_clean();
 
-		$this->response = $results->getIterator();
+		$body = $this->getBody();
 
-		foreach ($this->response as $num => &$response) {
-
-			// evaluate responses for exceptions when we
-			// have access to the request info
-
-			if (is_a($response, "Exception")) {
-
-				$request = $requests[$num];
-
-				$this->log("error", "Request in Guzzle BATCH request failed", array(
-					"method" => $request->getMethod(),
-					"url" => $request->getScheme() . "://" . $request->getHost() . $request->getPath(),
-					"params" => $request->getQuery(),
-					"error" => $response->getMessage()
-				));
-
-				$response = null;
-			}
-		}
+		print_r($body); die();
 
 		return $this;
 	}
@@ -304,16 +286,22 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 	{
 		if (!$this->response) return null;
 
-		if (method_exists($this->response, "getHeaders")) {
-			// single response
-			return $this->parseBody($this->response);
-		} else {
+		if (is_array($this->response)) {
 			// batch response
 			$responses = array();
 			foreach ($this->response as $response) {
-				$responses[] = $this->parseBody($response);
+
+				if ($response["state"] != "fulfilled") {
+					$responses[] = null;
+					continue;
+				}
+
+				$responses[] = $this->parseBody($response["value"]);
 			}
 			return $responses;
+		} else {
+			// single response
+			return $this->parseBody($this->response);
 		}
 	}
 
