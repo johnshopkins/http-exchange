@@ -64,19 +64,12 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 	 */
 	public function batch($requests)
 	{
-		// add a request that will fail
-		array_unshift($requests, $this->createAsynsRequest("get", "http://blah"));
-
 		if ($this->debug) ob_start();
 
 		// Wait for the requests to complete, even if some of them fail
 		$this->response = \GuzzleHttp\Promise\settle($requests)->wait();
 
 		if ($this->debug) ob_end_clean();
-
-		$body = $this->getBody();
-
-		print_r($body); die();
 
 		return $this;
 	}
