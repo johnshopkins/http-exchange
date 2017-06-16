@@ -74,23 +74,6 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 		return $this;
 	}
 
-	/**
-	 * Convert options to Guzzle formatting
-	 * @param  array $options Array
-	 * @return array
-	 */
-	protected function normalizeOptions($options)
-	{
-		if (!$options) return $options;
-
-		if (isset($options["body"])) {
-			$options["form_values"] = $options["body"];
-			unset($options["body"]);
-		}
-
-		return $options;
-	}
-
 	public function get($url, $params = null, $headers = null, $options = null)
 	{
 		$args = array(
@@ -98,8 +81,6 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 			"query" => $params,
 			"exceptions" => false
 		);
-
-		$options = $this->normalizeOptions($options);
 
 		if (is_array($options)) {
 			$args = array_merge($options, $args);
@@ -147,8 +128,6 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 			"exceptions" => false
 		);
 
-		$options = $this->normalizeOptions($options);
-
 		if (is_array($options)) {
 			$args = array_merge($options, $args);
 		}
@@ -178,8 +157,6 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 			"query" => $params,
 			"exceptions" => false
 		);
-
-		$options = $this->normalizeOptions($options);
 
 		if (is_array($options)) {
 			$args = array_merge($options, $args);
@@ -211,8 +188,6 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 			"exceptions" => false
 		);
 
-		$options = $this->normalizeOptions($options);
-
 		if (is_array($options)) {
 			$args = array_merge($options, $args);
 		}
@@ -243,8 +218,6 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 			"exceptions" => false
 		);
 
-		$options = $this->normalizeOptions($options);
-
 		if (is_array($options)) {
 			$args = array_merge($options, $args);
 		}
@@ -274,8 +247,6 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 			"query" => $params,
 			"exceptions" => false
 		);
-
-		$options = $this->normalizeOptions($options);
 
 		if (is_array($options)) {
 			$args = array_merge($options, $args);
