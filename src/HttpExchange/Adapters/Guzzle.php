@@ -46,11 +46,6 @@ class Guzzle implements \HttpExchange\Interfaces\ClientInterface
 		}
 	}
 
-	public function setCredentials($username, $password)
-	{
-		$this->http->setCredentials($username, $password);
-	}
-
 	public function createRequest($method, $url, $params = null, $header = null, $options = null)
 	{
 		$args = array(
