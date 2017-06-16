@@ -85,7 +85,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 
 		if (isset($options["body"])) {
 			$options["form_values"] = $options["body"];
-			unset($options["form_values"]);
+			unset($options["body"]);
 		}
 
 		return $options;
