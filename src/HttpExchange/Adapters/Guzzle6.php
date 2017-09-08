@@ -76,7 +76,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 
 	public function get($url, $params = null, $headers = null, $options = null)
 	{
-		$args = array(
+    $args = array(
 			"headers" => $headers,
 			"query" => $params,
 			"exceptions" => false
@@ -86,36 +86,58 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 			$args = array_merge($options, $args);
 		}
 
-		try {
+    $tries = 0;
+    $logs = array();
+    $this->response = null;
 
-			// start output buffering
-			if ($this->debug) ob_start();
+    do {
 
-			// run method
-	    $this->response = $this->http->get($url, $args);
+      $tries++;
 
-			// end output buffering
-	    if ($this->debug) ob_end_clean();
+      if ($tries > 1) {
+        // wait a couple seconds between first and second request
+        // $this->logger->addInfo("sleep for a sec");
+        sleep(2);
+      }
 
-		} catch (\Exception $e) {
+      try {
 
-			$logData = array(
-				"endpoint" => $url,
-				"params" => $params,
-				"headers" => $headers,
-				"error" => $e->getMessage(),
-				"url" => $_SERVER["REQUEST_URI"]
-			);
+        // $this->logger->addInfo("Attempt {$tries}");
 
-			if ($this->debug) {
-				$logData["debug"] = ob_get_contents();
-				ob_end_clean(); // end output buffering
-			}
+  			// start output buffering
+  			if ($this->debug) ob_start();
 
-			$this->log("error", "Guzzle GET request failed", $logData);
+  			// run method
+  	    $this->response = $this->http->get($url, $args);
 
-			$this->response = null;
-		}
+  			// end output buffering
+  	    if ($this->debug) ob_end_clean();
+
+  		} catch (\Exception $e) {
+
+  			$log = array(
+  				"endpoint" => $url,
+  				"params" => $params,
+  				"headers" => $headers,
+  				"error" => $e->getMessage(),
+  				"url" => $_SERVER["REQUEST_URI"]
+  			);
+
+  			if ($this->debug) {
+  				$log["debug"] = ob_get_contents();
+  				ob_end_clean(); // end output buffering
+  			}
+
+        $logs[] = $log;
+
+  		}
+
+    } while (is_null($this->response) && $tries < 2);
+
+    if (is_null($this->response)) {
+      // request failed twice
+      $this->log("error", "Guzzle GET request failed twice.", $logs);
+    }
 
 		return $this;
 	}
