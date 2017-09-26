@@ -64,12 +64,78 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 	 */
 	public function batch($requests)
 	{
-		if ($this->debug) ob_start();
+    $tries = 0;
+    $this->response = array();
 
-		// Wait for the requests to complete, even if some of them fail
-		$this->response = \GuzzleHttp\Promise\settle($requests)->wait();
+    do {
 
-		if ($this->debug) ob_end_clean();
+      $tries++;
+
+      if ($tries > 1) {
+        // wait a couple seconds between first and second request
+        // $this->logger->addInfo("sleep for a sec");
+        sleep(2);
+
+        // reset logs -- let's only log the second try
+        $logs = array();
+      }
+
+      // $this->logger->addInfo("Attempt #{$tries}; " . count($requests) . " requests.");
+
+      // start output buffering
+      if ($this->debug) ob_start();
+
+      // make requests
+      $response = \GuzzleHttp\Promise\settle($requests)->wait();
+
+      // end output buffering
+      if ($this->debug) ob_end_clean();
+
+      // save debug data if debug is on
+      $debug = $this->debug ? ob_get_contents() : null;
+
+      // analyze response and keep track of failed requests this loop
+      $failed = array();
+
+      foreach ($response as $i => $r) {
+
+        // add response to $this->response no matter the result
+        $this->response[$i] = $r;
+
+        if ($r["state"] !== "fulfilled") {
+
+          // failed request - add the request to an array of requests to try again
+          $failed[$i] = $requests[$i];
+
+          $context = $r["reason"]->getHandlerContext();
+
+          $log = array(
+            "api_uri" => $context["url"],
+            "error" => $context["error"],
+            "url" => $_SERVER["REQUEST_URI"]
+          );
+
+          if ($this->debug) {
+            // add debug data
+            $log["debug"] = $debug;
+          }
+
+          $logs[] = $log;
+        }
+      }
+
+      // overwrite $requests for next loop to failed requests from this loop
+      $requests = $failed;
+
+      // all requests succeeded; break out of loop
+      if (empty($failed)) break;
+
+    } while ($tries < 2);
+
+    if (!empty($failed)) {
+      // some requests still failed
+      $this->logger->addInfo(count($failed) . " request(s) in Guzzle batch request failed twice", $logs);
+    }
 
 		return $this;
 	}
