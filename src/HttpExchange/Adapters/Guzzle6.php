@@ -65,34 +65,25 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 	public function batch($requests)
 	{
     $tries = 0;
+    $logs = array();
     $this->response = array();
 
     do {
 
       $tries++;
 
+      $logs[$tries] = array();
+
       if ($tries > 1) {
         // wait a couple seconds between first and second request
         // $this->logger->addInfo("sleep for a sec");
         sleep(2);
-
-        // reset logs -- let's only log the second try
-        $logs = array();
       }
 
       // $this->logger->addInfo("Attempt #{$tries}; " . count($requests) . " requests.");
 
-      // start output buffering
-      if ($this->debug) ob_start();
-
       // make requests
       $response = \GuzzleHttp\Promise\settle($requests)->wait();
-
-      // end output buffering
-      if ($this->debug) ob_end_clean();
-
-      // save debug data if debug is on
-      $debug = $this->debug ? ob_get_contents() : null;
 
       // analyze response and keep track of failed requests this loop
       $failed = array();
@@ -115,12 +106,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
             "url" => $_SERVER["REQUEST_URI"]
           );
 
-          if ($this->debug) {
-            // add debug data
-            $log["debug"] = $debug;
-          }
-
-          $logs[] = $log;
+          $logs[$tries][] = $log;
         }
       }
 
