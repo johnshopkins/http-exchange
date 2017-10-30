@@ -42,7 +42,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 		}
 	}
 
-	public function createAsynsRequest($method, $url, $params = null, $header = null, $options = null)
+	public function createAsynsRequest($method, $url, $params = null, $headers = null, $options = null)
 	{
 		$args = array(
 			"headers" => $headers,
@@ -175,6 +175,8 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 
   			// start output buffering
   			if ($this->debug) ob_start();
+
+        // $url = "http://blah/";
 
   			// run method
   	    $this->response = $this->http->get($url, $args);
