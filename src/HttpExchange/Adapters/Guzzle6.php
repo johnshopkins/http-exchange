@@ -72,14 +72,11 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 
       $tries++;
 
-      $logs[$tries] = array();
+      $logs[] = "Batch request: {$tries}";
 
       if ($tries > 1) {
         // wait a couple seconds between first and second request
         sleep(2);
-
-        // reset logs -- let's only log the second try
-        $logs = array();
       }
 
       // $this->logger->addInfo("Attempt #{$tries}; " . count($requests) . " requests.");
@@ -122,7 +119,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
             $log["debug"] = $debug;
           }
 
-          $logs[$tries][] = $log;
+          $logs[] = $log;
         }
       }
 
