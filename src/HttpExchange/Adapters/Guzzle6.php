@@ -76,7 +76,6 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 
       if ($tries > 1) {
         // wait a couple seconds between first and second request
-        // $this->logger->addInfo("sleep for a sec");
         sleep(2);
 
         // reset logs -- let's only log the second try
@@ -165,18 +164,14 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 
       if ($tries > 1) {
         // wait a couple seconds between first and second request
-        // $this->logger->addInfo("sleep for a sec");
         sleep(2);
       }
 
       try {
 
-        // $this->logger->addInfo("Attempt {$tries}");
 
   			// start output buffering
   			if ($this->debug) ob_start();
-
-        // $url = "http://blah/";
 
   			// run method
   	    $this->response = $this->http->get($url, $args);
