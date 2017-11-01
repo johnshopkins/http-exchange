@@ -133,7 +133,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 
     if (!empty($failed)) {
       // some requests still failed
-      $this->logger->addInfo(count($failed) . " request(s) in Guzzle batch request failed twice", array("logs" =>$logs));
+      $this->logger->addError(count($failed) . " request(s) in Guzzle batch request failed twice", array("logs" =>$logs));
     }
 
 		return $this;
