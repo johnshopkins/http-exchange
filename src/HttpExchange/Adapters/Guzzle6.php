@@ -4,10 +4,29 @@ namespace HttpExchange\Adapters;
 
 class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 {
+  /**
+   * Instance of Guzzle6
+   * @var object
+   */
 	public $http;
-	protected $logger;
+
+  /**
+   * Record verbose debug data
+   * @var boolean
+   */
+	public $debug = false;
+
+  /**
+   * Response of last request
+   * @var object
+   */
 	public $response;
-	protected $debug = false;
+
+  /**
+   * Error of last request
+   * @var null/array
+   */
+  public $log = null;
 
 	public $json_types = array(
 		"application/json",
@@ -26,20 +45,10 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 		"application/mathml+xml"
 	);
 
-	public function __construct($guzzle, $logger = null)
+	public function __construct($guzzle)
 	{
 		$this->http = $guzzle;
-		$this->logger = $logger;
 		$this->debug = $this->http->getConfig("debug");
-	}
-
-	protected function log($level = "error", $message, $data = array())
-	{
-		$method = "add" . ucfirst($level);
-
-		if ($this->logger && method_exists($this->logger, $method)) {
-			$this->logger->$method($message, $data);
-		}
 	}
 
 	public function createAsynsRequest($method, $url, $params = null, $headers = null, $options = null)
@@ -64,7 +73,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 	 */
 	public function batch($requests)
 	{
-    $logs = array();
+    $this->log = array();
     $this->response = array();
 
     // start output buffering
@@ -99,7 +108,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
           $log["debug"] = $debug;
         }
 
-        $logs[] = $log;
+        $this->log[] = $log;
       }
     }
 
@@ -108,6 +117,9 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 
 	public function get($url, $params = null, $headers = null, $options = null)
 	{
+    $this->log = null;
+    $this->response = null;
+
     $args = array(
 			"headers" => $headers,
 			"query" => $params,
@@ -117,9 +129,6 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 		if (is_array($options)) {
 			$args = array_merge($options, $args);
 		}
-
-    $logs = array();
-    $this->response = null;
 
     try {
 
@@ -148,7 +157,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
         ob_end_clean(); // end output buffering
       }
 
-      $logs[] = $log;
+      $this->log = $log;
 
     }
 
@@ -157,6 +166,9 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 
 	public function post($url, $params = null, $headers = null, $options = null)
 	{
+    $this->log = null;
+    $this->response = null;
+
 		$args = array(
 			"headers" => $headers,
 			"query" => $params,
@@ -168,18 +180,27 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 		}
 
 		try {
+
 			if ($this->debug) ob_start();
 	    $this->response = $this->http->post($url, $args);
 			if ($this->debug) ob_end_clean();
-		} catch (\Exception $e) {
-			$this->log("error", "Guzzle POST request failed", array(
+
+    } catch (\Exception $e) {
+
+      $log = array(
 				"endpoint" => $url,
 				"params" => $params,
 				"headers" => $headers,
 				"error" => $e->getMessage()
-			));
-			if ($this->debug) ob_end_clean();
-			$this->response = null;
+			);
+
+      if ($this->debug) {
+        $log["debug"] = ob_get_contents();
+        ob_end_clean(); // end output buffering
+      }
+
+      $this->log = $log;
+
 		}
 
 		return $this;
@@ -198,18 +219,27 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 		}
 
 		try {
+
 			if ($this->debug) ob_start();
 	    $this->response = $this->http->put($url, $args);
 			if ($this->debug) ob_end_clean();
-		} catch (\Exception $e) {
-			$this->log("error", "Guzzle PUT request failed", array(
+
+    } catch (\Exception $e) {
+
+			$log = array(
 				"endpoint" => $url,
 				"params" => $params,
 				"headers" => $headers,
 				"error" => $e->getMessage()
-			));
-			if ($this->debug) ob_end_clean();
-			$this->response = null;
+			);
+
+      if ($this->debug) {
+        $log["debug"] = ob_get_contents();
+        ob_end_clean(); // end output buffering
+      }
+
+      $this->log = $log;
+
 		}
 
 		return $this;
@@ -228,18 +258,26 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 		}
 
 		try {
+
 			if ($this->debug) ob_start();
 	    $this->response = $this->http->patch($url, $args);
 			if ($this->debug) ob_end_clean();
+
 		} catch (\Exception $e) {
-			$this->log("error", "Guzzle PATCH request failed", array(
+
+			$log = array(
 				"endpoint" => $url,
 				"params" => $params,
 				"headers" => $headers,
 				"error" => $e->getMessage()
-			));
-			if ($this->debug) ob_end_clean();
-			$this->response = null;
+			);
+
+      if ($this->debug) {
+        $log["debug"] = ob_get_contents();
+        ob_end_clean(); // end output buffering
+      }
+
+      $this->log = $log;
 		}
 
 		return $this;
@@ -258,18 +296,26 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 		}
 
 		try {
+
 			if ($this->debug) ob_start();
 	    $this->response = $this->http->delete($url, $args);
 			if ($this->debug) ob_end_clean();
-		} catch (\Exception $e) {
-			$this->log("error", "Guzzle DELETE request failed", array(
+
+    } catch (\Exception $e) {
+
+			$log = array(
 				"endpoint" => $url,
 				"params" => $params,
 				"headers" => $headers,
 				"error" => $e->getMessage()
-			));
-			if ($this->debug) ob_end_clean();
-			$this->response = null;
+			);
+
+      if ($this->debug) {
+        $log["debug"] = ob_get_contents();
+        ob_end_clean(); // end output buffering
+      }
+
+      $this->log = $log;
 		}
 
 		return $this;
@@ -288,18 +334,26 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 		}
 
 		try {
+
 			if ($this->debug) ob_start();
 	    $this->response = $this->http->head($url, $args);
 			if ($this->debug) ob_end_clean();
+
 		} catch (\Exception $e) {
-			$this->log("error", "Guzzle HEAD request failed", array(
+
+      $log =  array(
 				"endpoint" => $url,
 				"params" => $params,
 				"headers" => $headers,
 				"error" => $e->getMessage()
-			));
-			if ($this->debug) ob_end_clean();
-			$this->response = null;
+			);
+
+      if ($this->debug) {
+        $log["debug"] = ob_get_contents();
+        ob_end_clean(); // end output buffering
+      }
+
+      $this->log = $log;
 		}
 
 		return $this;
