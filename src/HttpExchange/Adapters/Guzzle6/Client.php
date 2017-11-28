@@ -115,41 +115,39 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
 		return $this;
 	}
 
-	public function get($url, $params = null, $headers = null, $options = null)
-	{
+  public function createRequest($method, $url, $opts)
+  {
+    $request = new Request($method, $url, $opts);
+    return $request->get();
+  }
+
+  protected function send($request)
+  {
     $this->log = null;
     $this->response = null;
 
-    $args = array(
-			"headers" => $headers,
-			"query" => $params,
-			"exceptions" => false
-		);
-
-		if (is_array($options)) {
-			$args = array_merge($options, $args);
-		}
-
     try {
-
 
       // start output buffering
       if ($this->debug) ob_start();
 
-      // run method
-      $this->response = $this->http->get($url, $args);
+      // send request
+      $this->response = $this->http->send($request);
 
-      // end output buffering
+      // end output bufferin
       if ($this->debug) ob_end_clean();
 
     } catch (\Exception $e) {
 
+      $request = $e->getRequest();
+
       $log = array(
-        "endpoint" => $url,
-        "params" => $params,
-        "headers" => $headers,
-        "error" => $e->getMessage(),
-        "url" => $_SERVER["REQUEST_URI"]
+        "method" => $request->getMethod(),
+        "uri" => (string) $request->getUri(),
+        "headers" => $request->getHeaders(),
+        "requested_from" => $_SERVER["REQUEST_URI"],
+        "error" => $e->getMessage()
+
       );
 
       if ($this->debug) {
@@ -160,201 +158,52 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
       $this->log = $log;
 
     }
+  }
+
+	public function get($url, $opts = [])
+	{
+    $request = $this->createRequest('get', $url, $opts);
+    $this->send($request);
 
 		return $this;
 	}
 
-	public function post($url, $params = null, $headers = null, $options = null)
+	public function post($url, $opts = [])
 	{
-    $this->log = null;
-    $this->response = null;
-
-		$args = array(
-			"headers" => $headers,
-			"query" => $params,
-			"exceptions" => false
-		);
-
-		if (is_array($options)) {
-			$args = array_merge($options, $args);
-		}
-
-		try {
-
-			if ($this->debug) ob_start();
-	    $this->response = $this->http->post($url, $args);
-			if ($this->debug) ob_end_clean();
-
-    } catch (\Exception $e) {
-
-      $log = array(
-				"endpoint" => $url,
-				"params" => $params,
-				"headers" => $headers,
-				"error" => $e->getMessage()
-			);
-
-      if ($this->debug) {
-        $log["debug"] = ob_get_contents();
-        ob_end_clean(); // end output buffering
-      }
-
-      $this->log = $log;
-
-		}
+    $request = $this->createRequest('post', $url, $opts);
+    $this->send($request);
 
 		return $this;
 	}
 
-	public function put($url, $params = null, $headers = null, $options = null)
+	public function put($url, $opts = [])
 	{
-		$args = array(
-			"headers" => $headers,
-			"query" => $params,
-			"exceptions" => false
-		);
-
-		if (is_array($options)) {
-			$args = array_merge($options, $args);
-		}
-
-		try {
-
-			if ($this->debug) ob_start();
-	    $this->response = $this->http->put($url, $args);
-			if ($this->debug) ob_end_clean();
-
-    } catch (\Exception $e) {
-
-			$log = array(
-				"endpoint" => $url,
-				"params" => $params,
-				"headers" => $headers,
-				"error" => $e->getMessage()
-			);
-
-      if ($this->debug) {
-        $log["debug"] = ob_get_contents();
-        ob_end_clean(); // end output buffering
-      }
-
-      $this->log = $log;
-
-		}
+    $request = $this->createRequest('put', $url, $opts);
+    $this->send($request);
 
 		return $this;
 	}
 
-	public function patch($url, $params = null, $headers = null, $options = null)
+	public function patch($url, $opts = [])
 	{
-		$args = array(
-			"headers" => $headers,
-			"query" => $params,
-			"exceptions" => false
-		);
-
-		if (is_array($options)) {
-			$args = array_merge($options, $args);
-		}
-
-		try {
-
-			if ($this->debug) ob_start();
-	    $this->response = $this->http->patch($url, $args);
-			if ($this->debug) ob_end_clean();
-
-		} catch (\Exception $e) {
-
-			$log = array(
-				"endpoint" => $url,
-				"params" => $params,
-				"headers" => $headers,
-				"error" => $e->getMessage()
-			);
-
-      if ($this->debug) {
-        $log["debug"] = ob_get_contents();
-        ob_end_clean(); // end output buffering
-      }
-
-      $this->log = $log;
-		}
+    $request = $this->createRequest('patch', $url, $opts);
+    $this->send($request);
 
 		return $this;
 	}
 
-	public function delete($url, $params = null, $headers = null, $options = null)
+	public function delete($url, $opts = [])
 	{
-		$args = array(
-			"headers" => $headers,
-			"query" => $params,
-			"exceptions" => false
-		);
-
-		if (is_array($options)) {
-			$args = array_merge($options, $args);
-		}
-
-		try {
-
-			if ($this->debug) ob_start();
-	    $this->response = $this->http->delete($url, $args);
-			if ($this->debug) ob_end_clean();
-
-    } catch (\Exception $e) {
-
-			$log = array(
-				"endpoint" => $url,
-				"params" => $params,
-				"headers" => $headers,
-				"error" => $e->getMessage()
-			);
-
-      if ($this->debug) {
-        $log["debug"] = ob_get_contents();
-        ob_end_clean(); // end output buffering
-      }
-
-      $this->log = $log;
-		}
+    $request = $this->createRequest('delete', $url, $opts);
+    $this->send($request);
 
 		return $this;
 	}
 
-	public function head($url, $params = null, $headers = null, $options = null)
+	public function head($url, $opts = [])
 	{
-		$args = array(
-			"headers" => $headers,
-			"query" => $params,
-			"exceptions" => false
-		);
-
-		if (is_array($options)) {
-			$args = array_merge($options, $args);
-		}
-
-		try {
-
-			if ($this->debug) ob_start();
-	    $this->response = $this->http->head($url, $args);
-			if ($this->debug) ob_end_clean();
-
-		} catch (\Exception $e) {
-
-      $log =  array(
-				"endpoint" => $url,
-				"params" => $params,
-				"headers" => $headers,
-				"error" => $e->getMessage()
-			);
-
-      if ($this->debug) {
-        $log["debug"] = ob_get_contents();
-        ob_end_clean(); // end output buffering
-      }
-
-      $this->log = $log;
-		}
+    $request = $this->createRequest('head', $url, $opts);
+    $this->send($request);
 
 		return $this;
 	}
