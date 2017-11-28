@@ -64,76 +64,43 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 	 */
 	public function batch($requests)
 	{
-    $tries = 0;
     $logs = array();
     $this->response = array();
 
-    do {
+    // start output buffering
+    if ($this->debug) ob_start();
 
-      $tries++;
+    // make requests
+    $response = \GuzzleHttp\Promise\settle($requests)->wait();
 
-      $logs[] = "Batch request: {$tries}";
+    // save debug data if debug is on
+    $debug = $this->debug ? ob_get_contents() : null;
 
-      if ($tries > 1) {
-        // wait a couple seconds between first and second request
-        sleep(2);
-      }
+    // end output buffering
+    if ($this->debug) ob_end_clean();
 
-      // $this->logger->addInfo("Attempt #{$tries}; " . count($requests) . " requests.");
+    foreach ($response as $i => $r) {
 
-      // start output buffering
-      if ($this->debug) ob_start();
+      // add response to $this->response no matter the result
+      $this->response[$i] = $r;
 
-      // make requests
-      $response = \GuzzleHttp\Promise\settle($requests)->wait();
+      if ($r["state"] !== "fulfilled") {
 
-      // save debug data if debug is on
-      $debug = $this->debug ? ob_get_contents() : null;
+        $context = $r["reason"]->getHandlerContext();
 
-      // end output buffering
-      if ($this->debug) ob_end_clean();
+        $log = array(
+          "api_uri" => $context["url"],
+          "error" => $context["error"],
+          "url" => $_SERVER["REQUEST_URI"]
+        );
 
-      // analyze response and keep track of failed requests this loop
-      $failed = array();
-
-      foreach ($response as $i => $r) {
-
-        // add response to $this->response no matter the result
-        $this->response[$i] = $r;
-
-        if ($r["state"] !== "fulfilled") {
-
-          // failed request - add the request to an array of requests to try again
-          $failed[$i] = $requests[$i];
-
-          $context = $r["reason"]->getHandlerContext();
-
-          $log = array(
-            "api_uri" => $context["url"],
-            "error" => $context["error"],
-            "url" => $_SERVER["REQUEST_URI"]
-          );
-
-          if ($this->debug) {
-            // add debug data
-            $log["debug"] = $debug;
-          }
-
-          $logs[] = $log;
+        if ($this->debug) {
+          // add debug data
+          $log["debug"] = $debug;
         }
+
+        $logs[] = $log;
       }
-
-      // overwrite $requests for next loop to failed requests from this loop
-      $requests = $failed;
-
-      // all requests succeeded; break out of loop
-      if (empty($failed)) break;
-
-    } while ($tries < 2);
-
-    if (!empty($failed)) {
-      // some requests still failed
-      $this->logger->addError(count($failed) . " request(s) in Guzzle batch request failed twice", array("logs" =>$logs));
     }
 
 		return $this;
@@ -151,55 +118,38 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 			$args = array_merge($options, $args);
 		}
 
-    $tries = 0;
     $logs = array();
     $this->response = null;
 
-    do {
+    try {
 
-      $tries++;
 
-      if ($tries > 1) {
-        // wait a couple seconds between first and second request
-        sleep(2);
+      // start output buffering
+      if ($this->debug) ob_start();
+
+      // run method
+      $this->response = $this->http->get($url, $args);
+
+      // end output buffering
+      if ($this->debug) ob_end_clean();
+
+    } catch (\Exception $e) {
+
+      $log = array(
+        "endpoint" => $url,
+        "params" => $params,
+        "headers" => $headers,
+        "error" => $e->getMessage(),
+        "url" => $_SERVER["REQUEST_URI"]
+      );
+
+      if ($this->debug) {
+        $log["debug"] = ob_get_contents();
+        ob_end_clean(); // end output buffering
       }
 
-      try {
+      $logs[] = $log;
 
-
-  			// start output buffering
-  			if ($this->debug) ob_start();
-
-  			// run method
-  	    $this->response = $this->http->get($url, $args);
-
-  			// end output buffering
-  	    if ($this->debug) ob_end_clean();
-
-  		} catch (\Exception $e) {
-
-  			$log = array(
-  				"endpoint" => $url,
-  				"params" => $params,
-  				"headers" => $headers,
-  				"error" => $e->getMessage(),
-  				"url" => $_SERVER["REQUEST_URI"]
-  			);
-
-  			if ($this->debug) {
-  				$log["debug"] = ob_get_contents();
-  				ob_end_clean(); // end output buffering
-  			}
-
-        $logs[] = $log;
-
-  		}
-
-    } while (is_null($this->response) && $tries < 2);
-
-    if (is_null($this->response)) {
-      // request failed twice
-      $this->log("error", "Guzzle GET request failed twice.", array("logs" =>$logs));
     }
 
 		return $this;
