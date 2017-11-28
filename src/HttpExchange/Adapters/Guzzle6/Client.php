@@ -29,40 +29,40 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
   public $log = null;
 
 	public $json_types = array(
-		"application/json",
-		"text/json",
-		"text/x-json",
-		"text/javascript"
+		'application/json',
+		'text/json',
+		'text/x-json',
+		'text/javascript'
 	);
 
 	public $xml_types = array(
-		"application/xml",
-		"text/xml",
-		"application/rss+xml",
-		"application/xhtml+xml",
-		"application/atom+xml",
-		"application/xslt+xml",
-		"application/mathml+xml"
+		'application/xml',
+		'text/xml',
+		'application/rss+xml',
+		'application/xhtml+xml',
+		'application/atom+xml',
+		'application/xslt+xml',
+		'application/mathml+xml'
 	);
 
 	public function __construct($guzzle)
 	{
 		$this->http = $guzzle;
-		$this->debug = $this->http->getConfig("debug");
+		$this->debug = $this->http->getConfig('debug');
 	}
 
 	public function createAsynsRequest($method, $url, $params = null, $headers = null, $options = null)
 	{
 		$args = array(
-			"headers" => $headers,
-			"query" => $params
+			'headers' => $headers,
+			'query' => $params
 		);
 
 		if (is_array($options)) {
 			$args = array_merge($options, $args);
 		}
 
-		$method = strtolower($method) . "Async";
+		$method = strtolower($method) . 'Async';
 		return $this->http->$method($url, $args);
 	}
 
@@ -93,19 +93,19 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
       // add response to $this->response no matter the result
       $this->response[$i] = $r;
 
-      if ($r["state"] !== "fulfilled") {
+      if ($r['state'] !== 'fulfilled') {
 
-        $context = $r["reason"]->getHandlerContext();
+        $context = $r['reason']->getHandlerContext();
 
         $log = array(
-          "api_uri" => $context["url"],
-          "error" => $context["error"],
-          "url" => $_SERVER["REQUEST_URI"]
+          'api_uri' => $context['url'],
+          'error' => $context['error'],
+          'url' => $_SERVER['REQUEST_URI']
         );
 
         if ($this->debug) {
           // add debug data
-          $log["debug"] = $debug;
+          $log['debug'] = $debug;
         }
 
         $this->log[] = $log;
@@ -142,16 +142,16 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
       $request = $e->getRequest();
 
       $log = array(
-        "method" => $request->getMethod(),
-        "uri" => (string) $request->getUri(),
-        "headers" => $request->getHeaders(),
-        "requested_from" => $_SERVER["REQUEST_URI"],
-        "error" => $e->getMessage()
+        'method' => $request->getMethod(),
+        'uri' => (string) $request->getUri(),
+        'headers' => $request->getHeaders(),
+        'requested_from' => $_SERVER['REQUEST_URI'],
+        'error' => $e->getMessage()
 
       );
 
       if ($this->debug) {
-        $log["debug"] = ob_get_contents();
+        $log['debug'] = ob_get_contents();
         ob_end_clean(); // end output buffering
       }
 
@@ -222,12 +222,12 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
 			$responses = array();
 			foreach ($this->response as $response) {
 
-				if ($response["state"] != "fulfilled") {
+				if ($response['state'] != 'fulfilled') {
 					$responses[] = null;
 					continue;
 				}
 
-				$responses[] = $this->parseBody($response["value"]);
+				$responses[] = $this->parseBody($response['value']);
 			}
 			return $responses;
 		} else {
@@ -251,20 +251,20 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
 		// make case consistent
 		$headers = array_change_key_case($headers, CASE_LOWER);
 
-		if (isset($headers["content-type"]) && is_array($headers["content-type"])) {
-			$contentType = end($headers["content-type"]);
+		if (isset($headers['content-type']) && is_array($headers['content-type'])) {
+			$contentType = end($headers['content-type']);
 		}
 
-		$contentType = preg_split("/[;\s]+/", $contentType);
+		$contentType = preg_split('/[;\s]+/', $contentType);
 		$contentType = $contentType[0];
 
 		$body = (string) $response->getBody();
 
-		if (in_array($contentType, $this->json_types) || strpos($contentType, "+json") !== false) {
+		if (in_array($contentType, $this->json_types) || strpos($contentType, '+json') !== false) {
 
 			return json_decode($body);
 
-		} elseif (in_array($contentType, $this->xml_types) || strpos($contentType, "+xml") !== false) {
+		} elseif (in_array($contentType, $this->xml_types) || strpos($contentType, '+xml') !== false) {
 
 			return new \SimpleXMLElement($body);
 

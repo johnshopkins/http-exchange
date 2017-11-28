@@ -46,7 +46,7 @@ class Request
   {
     return [
       $method,
-      $url . "?" . http_build_query($opts['query']),
+      $url . '?' . http_build_query($opts['query']),
       $opts['headers'],
       $opts['body']
     ];
