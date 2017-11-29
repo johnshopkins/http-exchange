@@ -31,6 +31,8 @@ class Request
   public function __construct($method, $url, $opts = array())
   {
     $this->validateMehod($method);
+    $this->validateUrl($method);
+
     $opts = array_merge($this->defaultOpts, $opts);
 
     $this->request = $this->createRequest($method, $url, $opts);
@@ -41,6 +43,14 @@ class Request
     $lower = strtolower($method);
     if (!in_array($lower, $this->methods)) {
       throw new \BadMethodCallException("{$method} is not a valid method.");
+    }
+  }
+
+  protected function validateUrl($url)
+  {
+    // only basic checking
+    if (!preg_match('/^https?:\/\//i', $url)) {
+      throw new \BadMethodCallException("{$url} is not a valid URL.");
     }
   }
 
