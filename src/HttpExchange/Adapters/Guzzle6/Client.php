@@ -95,13 +95,9 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
 
       if ($r['state'] !== 'fulfilled') {
 
-        $context = $r['reason']->getHandlerContext();
+        $e = $r['reason'];
 
-        $log = array(
-          'api_uri' => $context['url'],
-          'error' => $context['error'],
-          'url' => $_SERVER['REQUEST_URI']
-        );
+        $log = $this->createLog($e);
 
         if ($this->debug) {
           // add debug data
@@ -139,16 +135,7 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
 
     } catch (\Exception $e) {
 
-      $request = $e->getRequest();
-
-      $log = array(
-        'method' => $request->getMethod(),
-        'uri' => (string) $request->getUri(),
-        'headers' => $request->getHeaders(),
-        'requested_from' => $_SERVER['REQUEST_URI'],
-        'error' => $e->getMessage()
-
-      );
+      $log = $this->creatLog($e);
 
       if ($this->debug) {
         $log['debug'] = ob_get_contents();
@@ -160,7 +147,34 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
     }
   }
 
-	public function get($url, $opts = [])
+  protected function createLog($e)
+  {
+    $request = $e->getRequest();
+    $error = $e->getMessage();
+
+    return [
+      'method' => $request->getMethod(),
+      'uri' => (string) $request->getUri(),
+      'headers' => $request->getHeaders(),
+      'requested_from_host' => $_SERVER['HTTP_HOST'],
+      'requested_from_uri' => $_SERVER['REQUEST_URI'],
+      'full_error' => $error,
+      'short_error' => $this->getShortError($error)
+    ];
+  }
+
+  /**
+   * Parse the error, looking for the curl error number
+   * @param  string $error cURL error
+   * @return string        Short cURL error
+   */
+  protected function getShortError($error)
+  {
+    preg_match('/cURL error \d+/', $error, $matches);
+    return !empty($matches) ? $matches[0] : null;
+  }
+
+  public function get($url, $opts = [])
 	{
     $request = $this->createRequest('get', $url, $opts);
     $this->send($request);
