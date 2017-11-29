@@ -155,11 +155,11 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
     ];
 
     if (isset($_SERVER['HTTP_HOST'])) {
-      $log['requested_from_host'] = $_SERVER['HTTP_HOST';
+      $log['requested_from_host'] = $_SERVER['HTTP_HOST'];
     }
 
     if (isset($_SERVER['REQUEST_URI'])) {
-      $log['requested_from_uri'] = $_SERVER['REQUEST_URI';
+      $log['requested_from_uri'] = $_SERVER['REQUEST_URI'];
     }
 
     return $log;
