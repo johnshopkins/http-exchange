@@ -51,21 +51,6 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
 		$this->debug = $this->http->getConfig('debug');
 	}
 
-	public function createAsynsRequest($method, $url, $params = null, $headers = null, $options = null)
-	{
-		$args = array(
-			'headers' => $headers,
-			'query' => $params
-		);
-
-		if (is_array($options)) {
-			$args = array_merge($options, $args);
-		}
-
-		$method = strtolower($method) . 'Async';
-		return $this->http->$method($url, $args);
-	}
-
 	/**
 	 * Fetch a batch of requests.
 	 * @param  array $requests Array of requests created using $this->createRequest
@@ -76,6 +61,8 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
     $this->log = array();
     $this->response = array();
 
+    $requests = array_map(array($this, "createBatchRequests"), $requests);
+
     // start output buffering
     if ($this->debug) ob_start();
 
@@ -83,7 +70,8 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
     $response = \GuzzleHttp\Promise\settle($requests)->wait();
 
     // save debug data if debug is on
-    $debug = $this->debug ? ob_get_contents() : null;
+    // debug data comes in one bug chunk -- not able to parse into separate requests
+    // $debug = $this->debug ? ob_get_contents() : null;
 
     // end output buffering
     if ($this->debug) ob_end_clean();
@@ -99,10 +87,10 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
 
         $log = $this->createLog($e);
 
-        if ($this->debug) {
-          // add debug data
-          $log['debug'] = $debug;
-        }
+        // if ($this->debug) {
+        //   // add debug data
+        //   $log['debug'] = $debug;
+        // }
 
         $this->log[] = $log;
       }
@@ -116,6 +104,12 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
     $request = new Request($method, $url, $opts);
     return $request->get();
   }
+
+  protected function createBatchRequests($args)
+	{
+    $request = new Request(...$args);
+    return $this->http->sendAsync($request->get());
+	}
 
   protected function send($request)
   {
