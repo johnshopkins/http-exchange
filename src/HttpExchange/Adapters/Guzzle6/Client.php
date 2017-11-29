@@ -113,7 +113,7 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
 
   protected function send($request)
   {
-    $this->log = null;
+    $this->log = array();
     $this->response = null;
 
     try {
@@ -136,7 +136,7 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
         ob_end_clean(); // end output buffering
       }
 
-      $this->log = $log;
+      $this->log[] = $log;
 
     }
   }
