@@ -129,7 +129,7 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
 
     } catch (\Exception $e) {
 
-      $log = $this->creatLog($e);
+      $log = $this->createLog($e);
 
       if ($this->debug) {
         $log['debug'] = ob_get_contents();
