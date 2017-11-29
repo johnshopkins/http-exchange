@@ -146,15 +146,23 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
     $request = $e->getRequest();
     $error = $e->getMessage();
 
-    return [
+    $log = [
       'method' => $request->getMethod(),
       'uri' => (string) $request->getUri(),
       'headers' => $request->getHeaders(),
-      'requested_from_host' => $_SERVER['HTTP_HOST'],
-      'requested_from_uri' => $_SERVER['REQUEST_URI'],
       'full_error' => $error,
       'short_error' => $this->getShortError($error)
     ];
+
+    if (isset($_SERVER['HTTP_HOST'])) {
+      $log['requested_from_host'] = $_SERVER['HTTP_HOST';
+    }
+
+    if (isset($_SERVER['REQUEST_URI'])) {
+      $log['requested_from_uri'] = $_SERVER['REQUEST_URI';
+    }
+
+    return $log;
   }
 
   /**
