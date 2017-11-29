@@ -20,6 +20,8 @@ class Request
     'body' => null
   ];
 
+  protected $methods = ['get', 'post', 'put', 'patch', 'delete', 'head'];
+
   /**
    * Constructor
    * @param string $method HTTP method
@@ -28,8 +30,18 @@ class Request
    */
   public function __construct($method, $url, $opts = array())
   {
+    $this->validateMehod($method);
     $opts = array_merge($this->defaultOpts, $opts);
+
     $this->request = $this->createRequest($method, $url, $opts);
+  }
+
+  protected function validateMehod($method)
+  {
+    $lower = strtolower($method);
+    if (!in_array($lower, $this->methods)) {
+      throw new \BadMethodCallException("{$method} is not a valid method.");
+    }
   }
 
   /**
