@@ -1,8 +1,8 @@
 <?php
 
-namespace HttpExchange\Adapters\Guzzle6;
+namespace HttpExchange\Adapters;
 
-class Client implements \HttpExchange\Interfaces\ClientInterface
+class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 {
   /**
    * Instance of Guzzle6
