@@ -53,7 +53,7 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
 
 	/**
 	 * Fetch a batch of requests.
-	 * @param  array $requests Array of requests created using $this->createRequest
+	 * @param  array $requests Array of requests [ [$method, $url, $opts] ]
 	 * @return array Data returned by each request
 	 */
 	public function batch($requests)
@@ -61,7 +61,7 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
     $this->log = array();
     $this->response = array();
 
-    $requests = array_map(array($this, "createBatchRequests"), $requests);
+    $requests = array_map(array($this, "createBatchRequest"), $requests);
 
     // start output buffering
     if ($this->debug) ob_start();
@@ -99,19 +99,7 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
 		return $this;
 	}
 
-  public function createRequest($method, $url, $opts)
-  {
-    $request = new Request($method, $url, $opts);
-    return $request->get();
-  }
-
-  protected function createBatchRequests($args)
-	{
-    $request = new Request(...$args);
-    return $this->http->sendAsync($request->get());
-	}
-
-  protected function send($request)
+  public function sendRequest($method, $url, $opts)
   {
     $this->log = array();
     $this->response = null;
@@ -121,8 +109,7 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
       // start output buffering
       if ($this->debug) ob_start();
 
-      // send request
-      $this->response = $this->http->send($request);
+      $this->response = $this->http->$method($url, $opts);
 
       // end output bufferin
       if ($this->debug) ob_end_clean();
@@ -140,6 +127,12 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
 
     }
   }
+
+  protected function createBatchRequest($args)
+	{
+    $method = array_shift($args) . "Async";
+    return $this->http->$method(...$args);
+	}
 
   protected function createLog($e)
   {
@@ -178,49 +171,37 @@ class Client implements \HttpExchange\Interfaces\ClientInterface
 
   public function get($url, $opts = [])
 	{
-    $request = $this->createRequest('get', $url, $opts);
-    $this->send($request);
-
+    $this->sendRequest('get', $url, $opts);
 		return $this;
 	}
 
 	public function post($url, $opts = [])
 	{
-    $request = $this->createRequest('post', $url, $opts);
-    $this->send($request);
-
+    $this->sendRequest('post', $url, $opts);
 		return $this;
 	}
 
 	public function put($url, $opts = [])
 	{
-    $request = $this->createRequest('put', $url, $opts);
-    $this->send($request);
-
+    $this->sendRequest('put', $url, $opts);
 		return $this;
 	}
 
 	public function patch($url, $opts = [])
 	{
-    $request = $this->createRequest('patch', $url, $opts);
-    $this->send($request);
-
+    $this->sendRequest('patch', $url, $opts);
 		return $this;
 	}
 
 	public function delete($url, $opts = [])
 	{
-    $request = $this->createRequest('delete', $url, $opts);
-    $this->send($request);
-
+    $this->sendRequest('delete', $url, $opts);
 		return $this;
 	}
 
 	public function head($url, $opts = [])
 	{
-    $request = $this->createRequest('head', $url, $opts);
-    $this->send($request);
-
+    $this->sendRequest('head', $url, $opts);
 		return $this;
 	}
 
