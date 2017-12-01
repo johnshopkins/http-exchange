@@ -4,354 +4,204 @@ namespace HttpExchange\Adapters;
 
 class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 {
+  /**
+   * Instance of Guzzle6
+   * @var object
+   */
 	public $http;
-	protected $logger;
+
+  /**
+   * Record verbose debug data
+   * @var boolean
+   */
+	public $debug = false;
+
+  /**
+   * Response of last request
+   * @var object
+   */
 	public $response;
-	protected $debug = false;
+
+  /**
+   * Error of last request
+   * @var null/array
+   */
+  public $log = null;
 
 	public $json_types = array(
-		"application/json",
-		"text/json",
-		"text/x-json",
-		"text/javascript"
+		'application/json',
+		'text/json',
+		'text/x-json',
+		'text/javascript'
 	);
 
 	public $xml_types = array(
-		"application/xml",
-		"text/xml",
-		"application/rss+xml",
-		"application/xhtml+xml",
-		"application/atom+xml",
-		"application/xslt+xml",
-		"application/mathml+xml"
+		'application/xml',
+		'text/xml',
+		'application/rss+xml',
+		'application/xhtml+xml',
+		'application/atom+xml',
+		'application/xslt+xml',
+		'application/mathml+xml'
 	);
 
-	public function __construct($guzzle, $logger = null)
+	public function __construct($guzzle)
 	{
 		$this->http = $guzzle;
-		$this->logger = $logger;
-		$this->debug = $this->http->getConfig("debug");
-	}
-
-	protected function log($level = "error", $message, $data = array())
-	{
-		$method = "add" . ucfirst($level);
-
-		if ($this->logger && method_exists($this->logger, $method)) {
-			$this->logger->$method($message, $data);
-		}
-	}
-
-	public function createAsynsRequest($method, $url, $params = null, $headers = null, $options = null)
-	{
-		$args = array(
-			"headers" => $headers,
-			"query" => $params
-		);
-
-		if (is_array($options)) {
-			$args = array_merge($options, $args);
-		}
-
-		$method = strtolower($method) . "Async";
-		return $this->http->$method($url, $args);
+		$this->debug = $this->http->getConfig('debug');
 	}
 
 	/**
 	 * Fetch a batch of requests.
-	 * @param  array $requests Array of requests created using $this->createRequest
+	 * @param  array $requests Array of requests [ [$method, $url, $opts] ]
 	 * @return array Data returned by each request
 	 */
 	public function batch($requests)
 	{
-    $tries = 0;
-    $logs = array();
+    $this->log = array();
     $this->response = array();
 
-    do {
+    $requests = array_map(array($this, "createBatchRequest"), $requests);
 
-      $tries++;
+    // start output buffering
+    if ($this->debug) ob_start();
 
-      $logs[] = "Batch request: {$tries}";
+    // make requests
+    $response = \GuzzleHttp\Promise\settle($requests)->wait();
 
-      if ($tries > 1) {
-        // wait a couple seconds between first and second request
-        sleep(2);
+    // save debug data if debug is on
+    // debug data comes in one bug chunk -- not able to parse into separate requests
+    // $debug = $this->debug ? ob_get_contents() : null;
+
+    // end output buffering
+    if ($this->debug) ob_end_clean();
+
+    foreach ($response as $i => $r) {
+
+      // add response to $this->response no matter the result
+      $this->response[$i] = $r;
+
+      if ($r['state'] !== 'fulfilled') {
+
+        $e = $r['reason'];
+
+        $log = $this->createLog($e);
+
+        // if ($this->debug) {
+        //   // add debug data
+        //   $log['debug'] = $debug;
+        // }
+
+        $this->log[] = $log;
       }
+    }
 
-      // $this->logger->addInfo("Attempt #{$tries}; " . count($requests) . " requests.");
+		return $this;
+	}
+
+  public function sendRequest($method, $url, $opts)
+  {
+    $this->log = array();
+    $this->response = null;
+
+    try {
 
       // start output buffering
       if ($this->debug) ob_start();
 
-      // make requests
-      $response = \GuzzleHttp\Promise\settle($requests)->wait();
+      $this->response = $this->http->$method($url, $opts);
 
-      // save debug data if debug is on
-      $debug = $this->debug ? ob_get_contents() : null;
-
-      // end output buffering
+      // end output bufferin
       if ($this->debug) ob_end_clean();
 
-      // analyze response and keep track of failed requests this loop
-      $failed = array();
+    } catch (\Exception $e) {
 
-      foreach ($response as $i => $r) {
+      $log = $this->createLog($e);
 
-        // add response to $this->response no matter the result
-        $this->response[$i] = $r;
-
-        if ($r["state"] !== "fulfilled") {
-
-          // failed request - add the request to an array of requests to try again
-          $failed[$i] = $requests[$i];
-
-          $context = $r["reason"]->getHandlerContext();
-
-          $log = array(
-            "api_uri" => $context["url"],
-            "error" => $context["error"],
-            "url" => $_SERVER["REQUEST_URI"]
-          );
-
-          if ($this->debug) {
-            // add debug data
-            $log["debug"] = $debug;
-          }
-
-          $logs[] = $log;
-        }
+      if ($this->debug) {
+        $log['debug'] = ob_get_contents();
+        ob_end_clean(); // end output buffering
       }
 
-      // overwrite $requests for next loop to failed requests from this loop
-      $requests = $failed;
+      $this->log[] = $log;
 
-      // all requests succeeded; break out of loop
-      if (empty($failed)) break;
+    }
+  }
 
-    } while ($tries < 2);
+  protected function createBatchRequest($args)
+	{
+    $method = array_shift($args) . "Async";
+    return $this->http->$method(...$args);
+	}
 
-    if (!empty($failed)) {
-      // some requests still failed
-      $this->logger->addError(count($failed) . " request(s) in Guzzle batch request failed twice", array("logs" =>$logs));
+  protected function createLog($e)
+  {
+    $request = $e->getRequest();
+    $error = $e->getMessage();
+
+    $log = [
+      'method' => $request->getMethod(),
+      'uri' => (string) $request->getUri(),
+      'headers' => $request->getHeaders(),
+      'full_error' => $error,
+      'short_error' => $this->getShortError($error)
+    ];
+
+    if (isset($_SERVER['HTTP_HOST'])) {
+      $log['requested_from_host'] = $_SERVER['HTTP_HOST'];
     }
 
-		return $this;
-	}
-
-	public function get($url, $params = null, $headers = null, $options = null)
-	{
-    $args = array(
-			"headers" => $headers,
-			"query" => $params,
-			"exceptions" => false
-		);
-
-		if (is_array($options)) {
-			$args = array_merge($options, $args);
-		}
-
-    $tries = 0;
-    $logs = array();
-    $this->response = null;
-
-    do {
-
-      $tries++;
-
-      if ($tries > 1) {
-        // wait a couple seconds between first and second request
-        sleep(2);
-      }
-
-      try {
-
-
-  			// start output buffering
-  			if ($this->debug) ob_start();
-
-  			// run method
-  	    $this->response = $this->http->get($url, $args);
-
-  			// end output buffering
-  	    if ($this->debug) ob_end_clean();
-
-  		} catch (\Exception $e) {
-
-  			$log = array(
-  				"endpoint" => $url,
-  				"params" => $params,
-  				"headers" => $headers,
-  				"error" => $e->getMessage(),
-  				"url" => $_SERVER["REQUEST_URI"]
-  			);
-
-  			if ($this->debug) {
-  				$log["debug"] = ob_get_contents();
-  				ob_end_clean(); // end output buffering
-  			}
-
-        $logs[] = $log;
-
-  		}
-
-    } while (is_null($this->response) && $tries < 2);
-
-    if (is_null($this->response)) {
-      // request failed twice
-      $this->log("error", "Guzzle GET request failed twice.", array("logs" =>$logs));
+    if (isset($_SERVER['REQUEST_URI'])) {
+      $log['requested_from_uri'] = $_SERVER['REQUEST_URI'];
     }
 
+    return $log;
+  }
+
+  /**
+   * Parse the error, looking for the curl error number
+   * @param  string $error cURL error
+   * @return string        Short cURL error
+   */
+  protected function getShortError($error)
+  {
+    preg_match('/cURL error \d+/', $error, $matches);
+    return !empty($matches) ? $matches[0] : null;
+  }
+
+  public function get($url, $opts = [])
+	{
+    $this->sendRequest('get', $url, $opts);
 		return $this;
 	}
 
-	public function post($url, $params = null, $headers = null, $options = null)
+	public function post($url, $opts = [])
 	{
-		$args = array(
-			"headers" => $headers,
-			"query" => $params,
-			"exceptions" => false
-		);
-
-		if (is_array($options)) {
-			$args = array_merge($options, $args);
-		}
-
-		try {
-			if ($this->debug) ob_start();
-	    $this->response = $this->http->post($url, $args);
-			if ($this->debug) ob_end_clean();
-		} catch (\Exception $e) {
-			$this->log("error", "Guzzle POST request failed", array(
-				"endpoint" => $url,
-				"params" => $params,
-				"headers" => $headers,
-				"error" => $e->getMessage()
-			));
-			if ($this->debug) ob_end_clean();
-			$this->response = null;
-		}
-
+    $this->sendRequest('post', $url, $opts);
 		return $this;
 	}
 
-	public function put($url, $params = null, $headers = null, $options = null)
+	public function put($url, $opts = [])
 	{
-		$args = array(
-			"headers" => $headers,
-			"query" => $params,
-			"exceptions" => false
-		);
-
-		if (is_array($options)) {
-			$args = array_merge($options, $args);
-		}
-
-		try {
-			if ($this->debug) ob_start();
-	    $this->response = $this->http->put($url, $args);
-			if ($this->debug) ob_end_clean();
-		} catch (\Exception $e) {
-			$this->log("error", "Guzzle PUT request failed", array(
-				"endpoint" => $url,
-				"params" => $params,
-				"headers" => $headers,
-				"error" => $e->getMessage()
-			));
-			if ($this->debug) ob_end_clean();
-			$this->response = null;
-		}
-
+    $this->sendRequest('put', $url, $opts);
 		return $this;
 	}
 
-	public function patch($url, $params = null, $headers = null, $options = null)
+	public function patch($url, $opts = [])
 	{
-		$args = array(
-			"headers" => $headers,
-			"query" => $params,
-			"exceptions" => false
-		);
-
-		if (is_array($options)) {
-			$args = array_merge($options, $args);
-		}
-
-		try {
-			if ($this->debug) ob_start();
-	    $this->response = $this->http->patch($url, $args);
-			if ($this->debug) ob_end_clean();
-		} catch (\Exception $e) {
-			$this->log("error", "Guzzle PATCH request failed", array(
-				"endpoint" => $url,
-				"params" => $params,
-				"headers" => $headers,
-				"error" => $e->getMessage()
-			));
-			if ($this->debug) ob_end_clean();
-			$this->response = null;
-		}
-
+    $this->sendRequest('patch', $url, $opts);
 		return $this;
 	}
 
-	public function delete($url, $params = null, $headers = null, $options = null)
+	public function delete($url, $opts = [])
 	{
-		$args = array(
-			"headers" => $headers,
-			"query" => $params,
-			"exceptions" => false
-		);
-
-		if (is_array($options)) {
-			$args = array_merge($options, $args);
-		}
-
-		try {
-			if ($this->debug) ob_start();
-	    $this->response = $this->http->delete($url, $args);
-			if ($this->debug) ob_end_clean();
-		} catch (\Exception $e) {
-			$this->log("error", "Guzzle DELETE request failed", array(
-				"endpoint" => $url,
-				"params" => $params,
-				"headers" => $headers,
-				"error" => $e->getMessage()
-			));
-			if ($this->debug) ob_end_clean();
-			$this->response = null;
-		}
-
+    $this->sendRequest('delete', $url, $opts);
 		return $this;
 	}
 
-	public function head($url, $params = null, $headers = null, $options = null)
+	public function head($url, $opts = [])
 	{
-		$args = array(
-			"headers" => $headers,
-			"query" => $params,
-			"exceptions" => false
-		);
-
-		if (is_array($options)) {
-			$args = array_merge($options, $args);
-		}
-
-		try {
-			if ($this->debug) ob_start();
-	    $this->response = $this->http->head($url, $args);
-			if ($this->debug) ob_end_clean();
-		} catch (\Exception $e) {
-			$this->log("error", "Guzzle HEAD request failed", array(
-				"endpoint" => $url,
-				"params" => $params,
-				"headers" => $headers,
-				"error" => $e->getMessage()
-			));
-			if ($this->debug) ob_end_clean();
-			$this->response = null;
-		}
-
+    $this->sendRequest('head', $url, $opts);
 		return $this;
 	}
 
@@ -369,12 +219,12 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 			$responses = array();
 			foreach ($this->response as $response) {
 
-				if ($response["state"] != "fulfilled") {
+				if ($response['state'] != 'fulfilled') {
 					$responses[] = null;
 					continue;
 				}
 
-				$responses[] = $this->parseBody($response["value"]);
+				$responses[] = $this->parseBody($response['value']);
 			}
 			return $responses;
 		} else {
@@ -398,20 +248,20 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 		// make case consistent
 		$headers = array_change_key_case($headers, CASE_LOWER);
 
-		if (isset($headers["content-type"]) && is_array($headers["content-type"])) {
-			$contentType = end($headers["content-type"]);
+		if (isset($headers['content-type']) && is_array($headers['content-type'])) {
+			$contentType = end($headers['content-type']);
 		}
 
-		$contentType = preg_split("/[;\s]+/", $contentType);
+		$contentType = preg_split('/[;\s]+/', $contentType);
 		$contentType = $contentType[0];
 
 		$body = (string) $response->getBody();
 
-		if (in_array($contentType, $this->json_types) || strpos($contentType, "+json") !== false) {
+		if (in_array($contentType, $this->json_types) || strpos($contentType, '+json') !== false) {
 
 			return json_decode($body);
 
-		} elseif (in_array($contentType, $this->xml_types) || strpos($contentType, "+xml") !== false) {
+		} elseif (in_array($contentType, $this->xml_types) || strpos($contentType, '+xml') !== false) {
 
 			return new \SimpleXMLElement($body);
 
