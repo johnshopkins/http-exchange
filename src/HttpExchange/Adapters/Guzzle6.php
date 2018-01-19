@@ -137,12 +137,14 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
   protected function createLog($e)
   {
     $request = $e->getRequest();
+    $response = $e->getResponse();
     $error = $e->getMessage();
 
     $log = [
       'method' => $request->getMethod(),
       'uri' => (string) $request->getUri(),
       'headers' => $request->getHeaders(),
+      'code' => $response ? $response->getStatusCode() : null,
       'full_error' => $error,
       'short_error' => $this->getShortError($error)
     ];
