@@ -138,6 +138,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
   {
     $request = $e->getRequest();
     $response = $e->getResponse();
+    $error = $e->getMessage();
 
     $log = [
       'method' => $request->getMethod(),
