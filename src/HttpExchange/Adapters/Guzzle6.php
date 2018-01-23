@@ -145,7 +145,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
       'uri' => (string) $request->getUri(),
       'headers' => $request->getHeaders(),
       'code' => $response ? $response->getStatusCode() : null,
-      'full_error' => $response->getBody()->getContents(),
+      'full_error' => $response ? $response->getBody()->getContents() : null,
       'short_error' => $this->getShortError($error)
     ];
 
