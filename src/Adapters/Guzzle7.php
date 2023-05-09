@@ -5,28 +5,10 @@ namespace HttpExchange\Adapters;
 class Guzzle7 implements \HttpExchange\Interfaces\ClientInterface
 {
   /**
-   * Instance of Guzzle6
-   * @var object
-   */
-  public $http;
-
-  /**
-   * Record verbose debug data
-   * @var boolean
-   */
-  public $debug = false;
-
-  /**
    * Response of last request
    * @var object
    */
   public $response;
-
-  /**
-   * Error of last request
-   * @var null/array
-   */
-  public $log = null;
 
   public $json_types = [
     'application/json',
@@ -45,10 +27,9 @@ class Guzzle7 implements \HttpExchange\Interfaces\ClientInterface
     'application/mathml+xml'
   ];
 
-  public function __construct($guzzle)
+  public function __construct(protected $http)
   {
-    $this->http = $guzzle;
-    $this->debug = $this->http->getConfig('debug');
+
   }
 
   /**
@@ -58,28 +39,8 @@ class Guzzle7 implements \HttpExchange\Interfaces\ClientInterface
    */
   public function batch($requests)
   {
-    $this->log = [];
-    $this->response = [];
-
     $requests = array_map([$this, 'createBatchRequest'], $requests);
-
-    // make requests
-    $response = \GuzzleHttp\Promise\settle($requests)->wait();
-
-    foreach ($response as $i => $r) {
-
-      // add response to $this->response no matter the result
-      $this->response[$i] = $r;
-
-      if ($r['state'] !== 'fulfilled') {
-
-        $e = $r['reason'];
-
-        $log = $this->createLog($e);
-
-        $this->log[] = $log;
-      }
-    }
+    $this->response = \GuzzleHttp\Promise\settle($requests)->wait();
 
     return $this;
   }
@@ -93,15 +54,7 @@ class Guzzle7 implements \HttpExchange\Interfaces\ClientInterface
    */
   public function sendRequest($method, $url, $opts)
   {
-    $this->log = [];
-    $this->response = null;
-
-    try {
-      $method = strtolower($method);
-      $this->response = $this->http->$method($url, $opts);
-    } catch (\Exception $e) {
-      $this->log[] = $this->createLog($e);
-    }
+    $this->response = $this->http->$method($url, $opts);
   }
 
   protected function createBatchRequest($args)
@@ -110,93 +63,39 @@ class Guzzle7 implements \HttpExchange\Interfaces\ClientInterface
     return $this->http->$method(...$args);
   }
 
-  /**
-   * Create a log entry based on the given exception
-   * @param $e object Exception object
-   * @return array
-   */
-  protected function createLog($e): array
-  {
-    $request = $e->getRequest();
-    $error = $e->getMessage();
-    $code = $e->getCode();
-    $reasonPhrase = $error;
-
-    $shortError = null;
-
-    if (method_exists($e, 'getResponse')) {
-      $response = $e->getResponse();
-      $shortError = $code . ' ' . $response->getReasonPhrase();
-    } else {
-      // parse cURL error
-      $shortError = $this->getShortError($error);
-    }
-
-    $log = [
-      'short_error' => $shortError,
-      'full_error' => $error,
-      'method' => $request->getMethod(),
-      'uri' => (string) $request->getUri(),
-      'code' => $code,
-      'headers' => $request->getHeaders(),
-      'handler_context' => $e->getHandlerContext()
-    ];
-
-    if (isset($_SERVER['HTTP_HOST'])) {
-      $log['requested_from_host'] = $_SERVER['HTTP_HOST'];
-    }
-
-    if (isset($_SERVER['REQUEST_URI'])) {
-      $log['requested_from_uri'] = $_SERVER['REQUEST_URI'];
-    }
-
-    return $log;
-  }
-
-  /**
-   * Parse the error, looking for the curl error number
-   * @param  string $error cURL error
-   * @return string        Short cURL error
-   */
-  protected function getShortError($error)
-  {
-    preg_match('/cURL error \d+/', $error, $matches);
-    return !empty($matches) ? $matches[0] : null;
-  }
-
   public function get($url, $opts = [])
   {
-    $this->sendRequest('get', $url, $opts);
+    $this->sendRequest('GET', $url, $opts);
     return $this;
   }
 
   public function post($url, $opts = [])
   {
-    $this->sendRequest('post', $url, $opts);
+    $this->sendRequest('POST', $url, $opts);
     return $this;
   }
 
   public function put($url, $opts = [])
   {
-    $this->sendRequest('put', $url, $opts);
+    $this->sendRequest('PUT', $url, $opts);
     return $this;
   }
 
   public function patch($url, $opts = [])
   {
-    $this->sendRequest('patch', $url, $opts);
+    $this->sendRequest('PATCH', $url, $opts);
     return $this;
   }
 
   public function delete($url, $opts = [])
   {
-    $this->sendRequest('delete', $url, $opts);
+    $this->sendRequest('DELETE', $url, $opts);
     return $this;
   }
 
   public function head($url, $opts = [])
   {
-    $this->sendRequest('head', $url, $opts);
+    $this->sendRequest('HEAD', $url, $opts);
     return $this;
   }
 
@@ -265,7 +164,6 @@ class Guzzle7 implements \HttpExchange\Interfaces\ClientInterface
     }
   }
 
-
   public function getStatusCode()
   {
     if ($this->response) {
@@ -276,5 +174,4 @@ class Guzzle7 implements \HttpExchange\Interfaces\ClientInterface
     }
 
   }
-
 }

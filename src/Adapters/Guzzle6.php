@@ -5,18 +5,6 @@ namespace HttpExchange\Adapters;
 class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 {
   /**
-   * Instance of Guzzle6
-   * @var object
-   */
-	public $http;
-
-  /**
-   * Record verbose debug data
-   * @var boolean
-   */
-	public $debug = false;
-
-  /**
    * Response of last request
    * @var object
    */
@@ -45,10 +33,9 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 		'application/mathml+xml'
 	);
 
-	public function __construct($guzzle)
+	public function __construct(protected $http)
 	{
-		$this->http = $guzzle;
-		$this->debug = $this->http->getConfig('debug');
+
 	}
 
 	/**
@@ -58,74 +45,16 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
 	 */
 	public function batch($requests)
 	{
-    $this->log = array();
-    $this->response = array();
-
     $requests = array_map(array($this, "createBatchRequest"), $requests);
 
-    // start output buffering
-    if ($this->debug) ob_start();
-
-    // make requests
-    $response = \GuzzleHttp\Promise\settle($requests)->wait();
-
-    // save debug data if debug is on
-    // debug data comes in one bug chunk -- not able to parse into separate requests
-    // $debug = $this->debug ? ob_get_contents() : null;
-
-    // end output buffering
-    if ($this->debug) ob_end_clean();
-
-    foreach ($response as $i => $r) {
-
-      // add response to $this->response no matter the result
-      $this->response[$i] = $r;
-
-      if ($r['state'] !== 'fulfilled') {
-
-        $e = $r['reason'];
-
-        $log = $this->createLog($e);
-
-        // if ($this->debug) {
-        //   // add debug data
-        //   $log['debug'] = $debug;
-        // }
-
-        $this->log[] = $log;
-      }
-    }
+    $this->response = \GuzzleHttp\Promise\settle($requests)->wait();
 
 		return $this;
 	}
 
   public function sendRequest($method, $url, $opts)
   {
-    $this->log = array();
-    $this->response = null;
-
-    try {
-
-      // start output buffering
-      if ($this->debug) ob_start();
-
-      $this->response = $this->http->$method($url, $opts);
-
-      // end output bufferin
-      if ($this->debug) ob_end_clean();
-
-    } catch (\Exception $e) {
-
-      $log = $this->createLog($e);
-
-      if ($this->debug) {
-        $log['debug'] = ob_get_contents();
-        ob_end_clean(); // end output buffering
-      }
-
-      $this->log[] = $log;
-
-    }
+    $this->response = $this->http->$method($url, $opts);
   }
 
   protected function createBatchRequest($args)
@@ -133,43 +62,6 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
     $method = array_shift($args) . "Async";
     return $this->http->$method(...$args);
 	}
-
-  protected function createLog($e)
-  {
-    $request = $e->getRequest();
-    $response = $e->getResponse();
-    $error = $e->getMessage();
-
-    $log = [
-      'method' => $request->getMethod(),
-      'uri' => (string) $request->getUri(),
-      'headers' => $request->getHeaders(),
-      'code' => $response ? $response->getStatusCode() : null,
-      'full_error' => $response ? $response->getBody()->getContents() : null,
-      'short_error' => $this->getShortError($error)
-    ];
-
-    if (isset($_SERVER['HTTP_HOST'])) {
-      $log['requested_from_host'] = $_SERVER['HTTP_HOST'];
-    }
-
-    if (isset($_SERVER['REQUEST_URI'])) {
-      $log['requested_from_uri'] = $_SERVER['REQUEST_URI'];
-    }
-
-    return $log;
-  }
-
-  /**
-   * Parse the error, looking for the curl error number
-   * @param  string $error cURL error
-   * @return string        Short cURL error
-   */
-  protected function getShortError($error)
-  {
-    preg_match('/cURL error \d+/', $error, $matches);
-    return !empty($matches) ? $matches[0] : null;
-  }
 
   public function get($url, $opts = [])
 	{
