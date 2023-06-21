@@ -137,7 +137,7 @@ class Guzzle6 implements \HttpExchange\Interfaces\ClientInterface
   protected function createLog($e)
   {
     $request = $e->getRequest();
-    $response = $e->getResponse();
+    $response = method_exists($e, 'getResponse') ? $e->getResponse() : null;
     $error = $e->getMessage();
 
     $log = [
