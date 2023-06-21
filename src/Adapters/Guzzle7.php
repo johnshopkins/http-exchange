@@ -54,7 +54,34 @@ class Guzzle7 implements \HttpExchange\Interfaces\ClientInterface
    */
   public function sendRequest($method, $url, $opts)
   {
-    $this->response = $this->http->$method($url, $opts);
+    try {
+      $this->response = $this->http->$method($url, $opts);
+    } catch (\Exception $e) {
+
+      $newException = new \HttpExchange\Exceptions\HTTP($e->getMessage(), $e->getCode());
+      $newException->addAdditionalData($this->getExceptionData($e));
+
+      throw $newException;
+    }
+  }
+
+  public function getExceptionData($e): array
+  {
+    $request = $e->getRequest();
+    $error = $e->getMessage();
+
+    if (method_exists($e, 'getResponse')) {
+      // get the full response content (guzzle truncates $e->getMessage())
+      $error = $e->getResponse()->getBody()->getContents();
+    }
+
+    return [
+      'full_error' => $error,
+      'method' => $request->getMethod(),
+      'uri' => (string) $request->getUri(),
+      'headers' => $request->getHeaders(),
+      'handler_context' => $e->getHandlerContext()
+    ];
   }
 
   protected function createBatchRequest($args)
