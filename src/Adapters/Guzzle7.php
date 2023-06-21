@@ -72,7 +72,7 @@ class Guzzle7 implements \HttpExchange\Interfaces\ClientInterface
 
     if (method_exists($e, 'getResponse')) {
       // get the full response content (guzzle truncates $e->getMessage())
-      $error = $e->getResponse()->getBody()->getContents();
+      $error = json_decode($e->getResponse()->getBody()->getContents());
     }
 
     return [
