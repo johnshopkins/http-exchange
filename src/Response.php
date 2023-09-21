@@ -4,9 +4,31 @@ namespace HttpExchange;
 
 class Response
 {
-  public function __construct(protected $response)
+  public array $json_types = [
+    'application/json',
+    'text/json',
+    'text/x-json',
+    'text/javascript'
+  ];
+
+  public array $xml_types = [
+    'application/xml',
+    'text/xml',
+    'application/rss+xml',
+    'application/xhtml+xml',
+    'application/atom+xml',
+    'application/xslt+xml',
+    'application/mathml+xml'
+  ];
+
+  public function __construct(protected \GuzzleHttp\Psr7\Response $response)
   {
 
+  }
+
+  public function getStatusCode()
+  {
+    return $this->response->getStatusCode();
   }
 
   /**
@@ -16,27 +38,12 @@ class Response
    */
   public function getBody()
   {
-    if (!$this->response) {
-      return null;
-    }
-
     if (is_array($this->response)) {
       // batch response
-      $responses = [];
-      foreach ($this->response as $response) {
-
-        if ($response['state'] != 'fulfilled') {
-          $responses[] = null;
-          continue;
-        }
-
-        $responses[] = $this->parseBody($response['value']);
-      }
-      return $responses;
-    } else {
-      // single response
-      return $this->parseBody($this->response);
+      return array_map([$this, 'parseBody'], $this->response);
     }
+
+    return $this->parseBody($this->response);
   }
 
   /**
@@ -47,9 +54,7 @@ class Response
    */
   protected function parseBody($response)
   {
-    if (!$response) {
-      return null;
-    }
+    if (!$response) return null;
 
     $headers = $response->getHeaders();
 
@@ -66,26 +71,13 @@ class Response
     $body = (string) $response->getBody();
 
     if (in_array($contentType, $this->json_types) || strpos($contentType, '+json') !== false) {
-
       return json_decode($body);
+    }
 
-    } elseif (in_array($contentType, $this->xml_types) || strpos($contentType, '+xml') !== false) {
-
+    if (in_array($contentType, $this->xml_types) || strpos($contentType, '+xml') !== false) {
       return new \SimpleXMLElement($body);
-
-    } else {
-      return $body;
-    }
-  }
-
-  public function getStatusCode()
-  {
-    if ($this->response) {
-      return $this->response->getStatusCode();
-    } else {
-      // exception
-      return null;
     }
 
+    return $body;
   }
 }
