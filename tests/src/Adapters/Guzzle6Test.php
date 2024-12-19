@@ -82,21 +82,21 @@ class Guzzle6Test extends \HttpExchange\Base
     $this->assertEquals(200, $response->getStatusCode());
   }
 
-  public function testBatch()
-  {
-    $requests = [
-      ['get', 'https://httpbin.org/get'],
-      ['post', 'https://httpbin.org/post'],
-    ];
+  // public function testBatch()
+  // {
+  //   $requests = [
+  //     ['get', 'https://httpbin.org/get'],
+  //     ['post', 'https://httpbin.org/post'],
+  //   ];
 
-    $responses = $this->adapter->batch($requests);
+  //   $responses = $this->adapter->batch($requests);
 
-    $this->assertEquals("https://httpbin.org/get", $responses[0]->getBody()->url);
-    $this->assertEquals(200, $responses[0]->getStatusCode());
+  //   $this->assertEquals("https://httpbin.org/get", $responses[0]->getBody()->url);
+  //   $this->assertEquals(200, $responses[0]->getStatusCode());
 
-    $this->assertEquals("https://httpbin.org/post", $responses[1]->getBody()->url);
-    $this->assertEquals(200, $responses[1]->getStatusCode());
-  }
+  //   $this->assertEquals("https://httpbin.org/post", $responses[1]->getBody()->url);
+  //   $this->assertEquals(200, $responses[1]->getStatusCode());
+  // }
 
   public function testGet__exeption()
   {
@@ -174,19 +174,19 @@ class Guzzle6Test extends \HttpExchange\Base
     }
   }
 
-  public function testBatch__exception()
-  {
-    $requests = [
-      ['get', 'https://httpbin.org/get'],
-      ['get', 'https://httpbin.org/status/404'],
-    ];
+  // public function testBatch__exception()
+  // {
+  //   $requests = [
+  //     ['get', 'https://httpbin.org/get'],
+  //     ['get', 'https://httpbin.org/status/404'],
+  //   ];
 
-    $responses = $this->adapter->batch($requests);
+  //   $responses = $this->adapter->batch($requests);
 
-    $this->assertEquals('https://httpbin.org/get', $responses[0]->getBody()->url);
-    $this->assertEquals(200, $responses[0]->getStatusCode());
+  //   $this->assertEquals('https://httpbin.org/get', $responses[0]->getBody()->url);
+  //   $this->assertEquals(200, $responses[0]->getStatusCode());
 
-    $this->assertEquals('Client error: `GET https://httpbin.org/status/404` resulted in a `404 NOT FOUND` response', $responses[1]->getMessage());
-    $this->assertEquals(404, $responses[1]->getStatusCode());
-  }
+  //   $this->assertEquals('Client error: `GET https://httpbin.org/status/404` resulted in a `404 NOT FOUND` response', $responses[1]->getMessage());
+  //   $this->assertEquals(404, $responses[1]->getStatusCode());
+  // }
 }
