@@ -61,8 +61,9 @@ class Response
     // make case consistent
     $headers = array_change_key_case($headers, CASE_LOWER);
 
-    if (isset($headers['content-type']) && is_array($headers['content-type'])) {
-      $contentType = end($headers['content-type']);
+    $contentType = $headers['content-type'] ?? '';
+    if (is_array($contentType)) {
+      $contentType = end($contentType);
     }
 
     $contentType = preg_split('/[;\s]+/', $contentType);
