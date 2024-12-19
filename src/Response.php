@@ -26,11 +26,6 @@ class Response
 
   }
 
-  public function getStatusCode()
-  {
-    return $this->response->getStatusCode();
-  }
-
   /**
    * Get the body of the response, which
    * can be one response or a pool or responses.
@@ -80,5 +75,14 @@ class Response
     }
 
     return $body;
+  }
+
+  public function __call($name, $arguments)
+  {
+    if (method_exists($this->response, $name)) {
+      return call_user_func_array([$this->response, $name], $arguments);
+    }
+    
+    return null;
   }
 }
