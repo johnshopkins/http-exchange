@@ -125,7 +125,8 @@ class AdapterBase
       'full_error' => $error,
       'method' => $request->getMethod(),
       'uri' => (string) $request->getUri(),
-      'headers' => $request->getHeaders(),
+      'request_headers' => $request->getHeaders(),
+      'respons_headers' => $response->getHeaders(),
       'handler_context' => $exception->getHandlerContext(),
     ];
   }
