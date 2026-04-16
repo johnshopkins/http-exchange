@@ -120,14 +120,19 @@ class AdapterBase
       }
     }
 
-    return [
+    $data = [
       'original_exception_type' => get_class($exception),
       'full_error' => $error,
       'method' => $request->getMethod(),
       'uri' => (string) $request->getUri(),
       'request_headers' => $request->getHeaders(),
-      'respons_headers' => $response->getHeaders(),
       'handler_context' => $exception->getHandlerContext(),
     ];
+
+    if ($response) {
+      $data['response_headers'] = $response->getHeaders();
+    }
+
+    return $data;
   }
 }
